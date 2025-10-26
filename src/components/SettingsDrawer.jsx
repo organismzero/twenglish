@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { setOpenAIKey, getOpenAIKey, setOpenAIModel, getOpenAIModel } from '../lib/translate/openai'
+import { setLibreEndpoint, getLibreEndpoint, setLibreApiKey, getLibreApiKey } from '../lib/translate/libre'
+import { getProvider, setProvider } from '../lib/translate/provider'
 import { getClientId, setClientId } from '../lib/auth'
 
 export default function SettingsDrawer() {
@@ -9,17 +11,26 @@ export default function SettingsDrawer() {
   const [key, setKey] = useState('')
   const [model, setModel] = useState('gpt-4o-mini')
   const [clientId, setCid] = useState('')
+  const [provider, setProv] = useState('openai')
+  const [libreEndpoint, setLEndpoint] = useState('https://libretranslate.com')
+  const [libreKey, setLKey] = useState('')
 
   useEffect(() => {
     setKey(getOpenAIKey())
     setModel(getOpenAIModel())
     setCid(getClientId())
+    setProv(getProvider())
+    setLEndpoint(getLibreEndpoint())
+    setLKey(getLibreApiKey())
   }, [])
 
   function save() {
+    setProvider(provider)
     setOpenAIKey(key.trim())
     setOpenAIModel(model.trim() || 'gpt-4o-mini')
     setClientId(clientId.trim())
+    setLibreEndpoint((libreEndpoint || '').trim())
+    setLibreApiKey((libreKey || '').trim())
     alert('Saved settings to session.')
     setOpen(false)
   }
@@ -46,14 +57,30 @@ export default function SettingsDrawer() {
               </div>
 
               <div className="card">
-                <div className="font-medium mb-2">OpenAI Translation</div>
-                <label className="block text-sm mb-1">API Key</label>
-                <input className="input w-full" value={key} onChange={e=>setKey(e.target.value)} placeholder="sk-..." />
-                <label className="block text-sm mt-3 mb-1">Model</label>
-                <input className="input w-full" value={model} onChange={e=>setModel(e.target.value)} placeholder="gpt-4o-mini" />
-                <p className="text-xs opacity-70 mt-2">
-                  Your key is stored in <code>sessionStorage</code> and used from your browser only. For personal use only.
-                </p>
+                <div className="font-medium mb-2">Translation Provider</div>
+                <label className="block text-sm mb-1">Provider</label>
+                <select className="input w-full" value={provider} onChange={e=>setProv(e.target.value)}>
+                  <option value="openai">OpenAI</option>
+                  <option value="libre">LibreTranslate</option>
+                </select>
+                {provider === 'openai' && (
+                  <div className="mt-3 space-y-2">
+                    <label className="block text-sm">OpenAI API Key</label>
+                    <input className="input w-full" value={key} onChange={e=>setKey(e.target.value)} placeholder="sk-..." />
+                    <label className="block text-sm">Model</label>
+                    <input className="input w-full" value={model} onChange={e=>setModel(e.target.value)} placeholder="gpt-4o-mini" />
+                    <p className="text-xs opacity-70 mt-2">Your key is stored in sessionStorage and used only in your browser.</p>
+                  </div>
+                )}
+                {provider === 'libre' && (
+                  <div className="mt-3 space-y-2">
+                    <label className="block text-sm">Endpoint</label>
+                    <input className="input w-full" value={libreEndpoint} onChange={e=>setLEndpoint(e.target.value)} placeholder="https://libretranslate.com" />
+                    <label className="block text-sm">API Key (optional)</label>
+                    <input className="input w-full" value={libreKey} onChange={e=>setLKey(e.target.value)} placeholder="leave blank if not required" />
+                    <p className="text-xs opacity-70 mt-2">Uses the public/your LibreTranslate server over CORS. Provide your own endpoint.</p>
+                  </div>
+                )}
               </div>
 
               <button className="btn btn-primary w-full" onClick={save}>Save</button>

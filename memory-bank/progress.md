@@ -5,12 +5,14 @@
 - Followed streams/channels listing via Helix.
 - Join channel chat via IRC WebSocket (anonymous read‑only nick).
 - Per‑message language detection and rolling majority primary language.
-- Conditional translation to English through OpenAI (per‑user key).
+- Conditional translation to English through:
+  - OpenAI (per‑user key, client‑side), or
+  - LibreTranslate (user‑provided endpoint and optional key).
 - Next.js static export configured for GitHub Pages basePath.
 
 ## What’s Left
 - Optional: PKCE migration for OAuth.
-- Optional: Alternative translation adapters (e.g., LibreTranslate with user‑provided endpoint).
+- Optional: Additional translation adapters.
 - Optional: UI polish for language and tag indicators.
 - CI for Pages deployment (if desired in this repo).
 
@@ -21,4 +23,3 @@
 
 ## Status
 - MVP complete and suitable for personal deployment to GitHub Pages.
-
