@@ -1,6 +1,8 @@
 'use client'
 
-export default function ChannelCard({ stream, onJoin }) {
+import Link from 'next/link'
+
+export default function ChannelCard({ stream, onJoin, href }) {
   const login = stream.user_login || stream.broadcaster_login
   const title = stream.title || ''
   const lang = stream.language || 'unknown'
@@ -19,7 +21,11 @@ export default function ChannelCard({ stream, onJoin }) {
       </div>
       <div className="flex items-center justify-between">
         <div className="text-xs opacity-70">{isLive ? `Live • ${viewer_count||0} viewers` : 'Offline'}</div>
-        <button className="btn btn-primary" onClick={()=>onJoin(login)}>Join chat</button>
+        {href ? (
+          <Link className="btn btn-primary" href={href}>Join chat</Link>
+        ) : (
+          <button className="btn btn-primary" onClick={()=>onJoin(login)}>Join chat</button>
+        )}
       </div>
     </div>
   )

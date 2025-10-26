@@ -1,23 +1,27 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { getUsersByLogin, getStreamByUserId } from '../../../lib/helix'
-import { TwitchIRC } from '../../../lib/irc'
-import { majorityLanguageISO1, detectISO1 } from '../../../lib/detect'
-import { translateIfNeeded } from '../../../lib/translate'
-import ChatMessage from '../../../components/ChatMessage'
-import SettingsDrawer from '../../../components/SettingsDrawer'
+import { useSearchParams } from 'next/navigation'
+import { getUsersByLogin, getStreamByUserId } from '../../lib/helix'
+import { TwitchIRC } from '../../lib/irc'
+import { majorityLanguageISO1, detectISO1 } from '../../lib/detect'
+import { translateIfNeeded } from '../../lib/translate'
+import ChatMessage from '../../components/ChatMessage'
+import SettingsDrawer from '../../components/SettingsDrawer'
 
-export default function ChatPage({ params }) {
-  const { login } = params
+export default function ChatPage() {
+  const search = useSearchParams()
+  const login = (search.get('login') || '').trim()
   const [channel, setChannel] = useState(null)
   const [primaryLang, setPrimaryLang] = useState(null)
   const [streamTags, setStreamTags] = useState([])
   const [msgs, setMsgs] = useState([])
   const bufRef = useRef([])
+  const seenRef = useRef(new Set())
   const ircRef = useRef(null)
 
   useEffect(() => {
+    if (!login) return
     ;(async () => {
       const users = await getUsersByLogin([login])
       const u = users[0]
@@ -28,37 +32,46 @@ export default function ChatPage({ params }) {
         setPrimaryLang(s.language || null)
         setStreamTags(s.tags || [])
       }
-      // connect IRC
       const irc = new TwitchIRC({
         onMessage: async (m) => {
-          // Detect per-message language
           const iso1 = detectISO1(m.text)
-          // Maybe translate
+          const msgKey = m.id || `${m.channel}:${m.ts}:${m.user}:${m.text}`
+          if (seenRef.current.has(msgKey)) return
+          seenRef.current.add(msgKey)
           const translation = await translateIfNeeded(m.text, iso1, primaryLang || (s?.language || null))
-          const enhanced = { ...m, lang: iso1, translation }
+          const enhanced = { ...m, lang: iso1, translation, _key: msgKey }
           setMsgs(prev => [...prev.slice(-300), enhanced])
 
-          // maintain buffer for majority
           bufRef.current.push({ text: m.text })
           if (bufRef.current.length > 60) bufRef.current.shift()
           const maj = majorityLanguageISO1(bufRef.current)
-          if (maj) setPrimaryLang(prev => prev || maj) // if unknown, adopt maj
+          if (maj) setPrimaryLang(prev => prev || maj)
         },
-        onState: (st) => {}
+        onState: () => {}
       })
       ircRef.current = irc
       irc.join(login)
     })()
     return () => {
-      ircRef.current?.part?.(login)
+      try { ircRef.current?.part?.(login) } catch {}
+      try { ircRef.current?.disconnect?.() } catch {}
+      ircRef.current = null
+      seenRef.current.clear()
+      bufRef.current = []
     }
   }, [login])
+
+  if (!login) {
+    return (
+      <div className="card">No channel specified. Provide a channel login with the query param, e.g. <code>/chat/?login=somechannel</code>.</div>
+    )
+  }
 
   return (
     <div className="grid gap-4">
       <div className="card flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-aquadark-800 grid place-items-center uppercase font-bold">{(login||'?')[0]}</div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="font-semibold">@{login}</div>
           <div className="text-sm opacity-70">Primary language: <span className="badge">{(primaryLang||'unknown').toUpperCase()}</span></div>
         </div>
@@ -68,7 +81,7 @@ export default function ChatPage({ params }) {
 
       <div className="card max-h-[70vh] overflow-y-auto">
         {msgs.map(m => (
-          <ChatMessage key={m.id || m.ts} msg={m} showOriginal={primaryLang && primaryLang !== 'en'} />
+          <ChatMessage key={m._key || m.id || m.ts} msg={m} showOriginal={primaryLang && primaryLang !== 'en'} />
         ))}
       </div>
     </div>

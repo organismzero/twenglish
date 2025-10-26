@@ -15,6 +15,7 @@ export class TwitchIRC {
     this.onState = onState || (()=>{})
     this.joined = new Set()
     this.pingIv = null
+    this.queue = []
   }
 
   connect() {
@@ -25,6 +26,15 @@ export class TwitchIRC {
       this.send(`PASS SCHMOOPIIE`) // placeholder per Twitch spec for anon (ignored)
       this.send(`NICK ${this.nick}`)
       this.onState('connected')
+      // Flush any queued commands (e.g., JOIN sent during CONNECTING)
+      while (this.queue.length) {
+        const cmd = this.queue.shift()
+        this.ws?.send(cmd + '\r\n')
+      }
+      // Re-join known channels after (re)connect
+      for (const ch of this.joined) {
+        this.ws?.send(`JOIN #${ch}\r\n`)
+      }
       this.pingIv = setInterval(()=> this.send('PING :tmi.twitch.tv'), 60*1000)
     }
     this.ws.onclose = () => {
@@ -41,7 +51,13 @@ export class TwitchIRC {
     }
   }
 
-  send(s) { this.ws?.send(s + '\r\n') }
+  send(s) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(s + '\r\n')
+    } else {
+      this.queue.push(s)
+    }
+  }
 
   handle(line) {
     if (line.startsWith('PING')) {
@@ -77,6 +93,13 @@ export class TwitchIRC {
     if (!this.joined.has(ch)) return
     this.send(`PART #${ch}`)
     this.joined.delete(ch)
+  }
+
+  disconnect() {
+    try { this.ws?.close() } catch {}
+    this.ws = null
+    if (this.pingIv) clearInterval(this.pingIv)
+    this.pingIv = null
   }
 }
 

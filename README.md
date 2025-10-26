@@ -59,6 +59,11 @@ npm run dev
 - **Anonymous IRC:** We connect to chat using an anonymous nick (`justinfan*`), which is permitted for reading public chat.
 - **Primary language:** We start with Twitch `stream.language` if available, and refine over time with chat-majority detection. Messages in the primary language are translated to English; English streams show original only.
 
+### Routing note
+
+- For static export compatibility, the chat view uses a query parameter instead of a dynamic segment.
+- Chat URL format: `/chat/?login=<channel_login>`
+
 ## Customization
 
 - Theme colors are defined under `aquadark` in `tailwind.config.js`.

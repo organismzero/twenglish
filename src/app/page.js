@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { buildAuthUrl, getToken, validateToken, getClientId } from '../lib/auth'
 import { getUser, getFollowedStreams, getFollowedChannels, getUsersByLogin } from '../lib/helix'
 import ChannelCard from '../components/ChannelCard'
@@ -8,6 +9,7 @@ import SettingsDrawer from '../components/SettingsDrawer'
 import Link from 'next/link'
 
 export default function HomePage() {
+  const router = useRouter()
   const [tokenValid, setTokenValid] = useState(false)
   const [user, setUser] = useState(null)
   const [streams, setStreams] = useState([])
@@ -92,18 +94,24 @@ export default function HomePage() {
 
           {!loading && tab==='live' && (
             <div className="grid sm:grid-cols-2 gap-4">
-              {streams.map(s => (
-                <ChannelCard key={s.id + s.user_login} stream={s} onJoin={(login)=>{ window.location.href = `/chat/${login}/` }} />
-              ))}
+              {streams.map(s => {
+                const login = s.user_login
+                return (
+                  <ChannelCard key={s.id + s.user_login} stream={s} href={{ pathname: '/chat', query: { login } }} />
+                )
+              })}
               {streams.length===0 && <div className="opacity-70">No live followed streams.</div>}
             </div>
           )}
 
           {!loading && tab==='all' && (
             <div className="grid sm:grid-cols-2 gap-4">
-              {channels.map(s => (
-                <ChannelCard key={s.user_id + s.user_login} stream={s} onJoin={(login)=>{ window.location.href = `/chat/${login}/` }} />
-              ))}
+              {channels.map(s => {
+                const login = s.user_login
+                return (
+                  <ChannelCard key={s.user_id + s.user_login} stream={s} href={{ pathname: '/chat', query: { login } }} />
+                )
+              })}
               {channels.length===0 && <div className="opacity-70">No followed channels.</div>}
             </div>
           )}
