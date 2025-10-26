@@ -1,0 +1,26 @@
+{
+  "name": "twenglish",
+  "version": "1.0.0",
+  "description": "Light Twitch chat client that guesses the primary language for the Twitch stream and then translates all incoming chat messages from that language to your preferred language. Can optionally translate messages you send into that language also.",
+  "keywords": [
+    "twitch",
+    "chat",
+    "translate",
+    "multilingual"
+  ],
+  "homepage": "https://github.com/organismzero/twenglish#readme",
+  "bugs": {
+    "url": "https://github.com/organismzero/twenglish/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/organismzero/twenglish.git"
+  },
+  "license": "MIT",
+  "author": "OrganismZero",
+  "type": "commonjs",
+  "main": "twenglish.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
