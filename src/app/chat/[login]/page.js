@@ -5,6 +5,8 @@
 import { Suspense } from 'react'
 import ChatPageInner from './client'
 
+const isDev = process.env.NODE_ENV !== 'production'
+
 export default function ChatPage() {
   return (
     <Suspense fallback={<div className="card">Loading chat…</div>}>
@@ -13,8 +15,11 @@ export default function ChatPage() {
   )
 }
 
-export const dynamicParams = false
+export const dynamic = isDev ? 'force-dynamic' : 'force-static'
+export const revalidate = isDev ? 0 : false
+export const dynamicParams = isDev
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  if (isDev) return []
   return [{ login: '__placeholder__' }]
 }
