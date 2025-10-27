@@ -42,24 +42,7 @@ npm run dev
    ```bash
    npm run build
    ```
-3. The static site is generated in `out/`. Push that to the `gh-pages` branch or enable Pages from `/root` after adding a workflow.
-   A minimal workflow example:
-   ```yaml
-   name: Deploy
-   on: push
-   jobs:
-     deploy:
-       runs-on: ubuntu-latest
-       steps:
-         - uses: actions/checkout@v4
-         - uses: actions/setup-node@v4
-           with: { node-version: 20 }
-         - run: npm ci
-         - run: npm run build
-         - uses: actions/upload-pages-artifact@v3
-           with: { path: out }
-         - uses: actions/deploy-pages@v4
-   ```
+3. The static site is generated in `out/` plus `.nojekyll` and `CNAME` (copied by the postbuild script). The repo already includes an Actions workflow at `.github/workflows/deploy.yml` that builds with `npm run build` and deploys to GitHub Pages.
 
 ### Notes
 
