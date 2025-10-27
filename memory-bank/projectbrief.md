@@ -1,4 +1,4 @@
-# Project Brief: Twenglish
+# Project Brief: Twilingual
 
 ## Goal
 Build a static, browser‑only Twitch chat client that:

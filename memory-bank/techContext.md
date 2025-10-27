@@ -7,13 +7,13 @@
 - No backend services; static export for GitHub Pages.
 
 ## Twitch Integration
-- OAuth: Implicit Grant in browser. Redirect URI must be set to `https://<user>.github.io/twenglish/callback/`.
+- OAuth: Implicit Grant in browser. Redirect URI must be set to `https://<user>.github.io/twilingual/callback/`.
 - Helix endpoints used: `/users`, `/streams/followed`, `/channels/followed`, `/users?login=`, `/streams`.
 - Headers: `Authorization: Bearer <token>`, `Client-Id: <clientId>`.
 - IRC: `wss://irc-ws.chat.twitch.tv:443` with CAP tags/commands/membership; anonymous NICK (`justinfan*`) for read‑only.
 
 ## Static Hosting
-- `next.config.mjs`: `output: 'export'`, `trailingSlash: true`, `basePath: '/twenglish'` in production.
+- `next.config.mjs`: `output: 'export'`, `trailingSlash: true`, `basePath: '/twilingual'` in production.
 - Build: `npm run build` → outputs static site in `out/`.
 
 ## Storage & Security

@@ -1,4 +1,4 @@
-# Twenglish
+# Twilingual
 
 Static Twitch chat client with automatic language detection and **OpenAI translation to English**.
 
@@ -29,13 +29,13 @@ npm run dev
    If no provider credentials are supplied, messages will not be translated.
 4. In your Twitch app, set the OAuth Redirect URLs EXACTLY (must match character-for-character):
    - Development: `http://localhost:3000/callback/`
-   - Production (GitHub Pages): `https://<your-username>.github.io/twenglish/callback/`
+   - Production (GitHub Pages): `https://<your-username>.github.io/twilingual/callback/`
    Note: The trailing slash is required because this app uses `trailingSlash: true` and the login flow sends `/callback/`.
 
 ### Build & deploy to GitHub Pages
 
-1. In `next.config.mjs` the `basePath` is `/twenglish` when `NODE_ENV=production`.
-2. Build and export:
+1. In `next.config.mjs` the `basePath` is `/twilingual` when `NODE_ENV=production`.
+2. Build (Next.js already exports static assets when `output: 'export'`):
    ```bash
    npm run build
    ```

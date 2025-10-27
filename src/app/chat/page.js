@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { getUsersByLogin, getStreamByUserId } from '../../lib/helix'
 import { TwitchIRC } from '../../lib/irc'
@@ -10,6 +10,14 @@ import ChatMessage from '../../components/ChatMessage'
 import SettingsDrawer from '../../components/SettingsDrawer'
 
 export default function ChatPage() {
+  return (
+    <Suspense fallback={<div className="card">Loading chat…</div>}>
+      <ChatPageContent />
+    </Suspense>
+  )
+}
+
+function ChatPageContent() {
   const search = useSearchParams()
   const login = (search.get('login') || '').trim()
   const [channel, setChannel] = useState(null)

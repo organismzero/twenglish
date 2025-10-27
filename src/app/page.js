@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { buildAuthUrl, getToken, validateToken, getClientId } from '../lib/auth'
+import { withBasePath } from '../lib/base-path'
 import { getUser, getFollowedStreams, getFollowedChannels, getUsersByLogin } from '../lib/helix'
 import ChannelCard from '../components/ChannelCard'
 import SettingsDrawer from '../components/SettingsDrawer'
@@ -53,7 +54,7 @@ export default function HomePage() {
   }, [tokenValid])
 
   const redirectUri = (typeof window !== 'undefined')
-    ? window.location.origin + (process.env.NODE_ENV === 'production' ? '/twenglish' : '') + '/callback/'
+    ? window.location.origin + withBasePath('/callback/')
     : ''
 
   function login() {
@@ -69,7 +70,7 @@ export default function HomePage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-semibold">Twenglish</h1>
+        <h1 className="text-2xl font-semibold">Twilingual</h1>
         <div className="ml-auto"><SettingsDrawer/></div>
       </div>
 

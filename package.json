@@ -1,11 +1,11 @@
 {
-  "name": "twenglish",
+  "name": "twilingual",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build && next export",
+    "build": "next build",
     "start": "next start",
     "postinstall": "tailwindcss -v > /dev/null || echo 'Tailwind ready'"
   },
