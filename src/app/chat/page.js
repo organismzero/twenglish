@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense, useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { getUsersByLogin, getStreamByUserId } from '../../lib/helix'
 import { TwitchIRC } from '../../lib/irc'
 import { majorityLanguageISO1, detectISO1 } from '../../lib/detect'
@@ -20,6 +20,7 @@ export default function ChatPage() {
 
 function ChatPageContent() {
   const search = useSearchParams()
+  const router = useRouter()
   const login = (search.get('login') || '').trim()
   const [channel, setChannel] = useState(null)
   const [primaryLang, setPrimaryLang] = useState(null)
@@ -96,6 +97,7 @@ function ChatPageContent() {
   return (
     <div className="grid gap-4">
       <div className="card flex items-center gap-3">
+        <button className="btn" onClick={()=>router.push('/')}>Back to channels</button>
         <div className="w-10 h-10 rounded-xl bg-aquadark-800 grid place-items-center uppercase font-bold">{(login||'?')[0]}</div>
         <div className="flex-1 min-w-0">
           <div className="font-semibold">@{login}</div>
