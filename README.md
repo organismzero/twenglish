@@ -34,6 +34,7 @@ npm run dev
    - Production (custom domain): `https://twilingual.com/callback/`
    - If you deploy under a GitHub Pages subpath, set `NEXT_PUBLIC_BASE_PATH=/your-repo` and use `https://<your-username>.github.io/<your-repo>/callback/`
    Note: The trailing slash is required because this app uses `trailingSlash: true` and the login flow sends `/callback/`.
+5. Set `NEXT_PUBLIC_SITE_URL=https://twilingual.com` in your deployment environment so OAuth redirects always point at the custom domain (see the Actions workflow for an example).
 
 ### Build & deploy to GitHub Pages
 
@@ -42,7 +43,7 @@ npm run dev
    ```bash
    npm run build
    ```
-3. The static site is generated in `out/` plus `.nojekyll` and `CNAME` (copied by the postbuild script). The repo already includes an Actions workflow at `.github/workflows/deploy.yml` that builds with `npm run build` and deploys to GitHub Pages.
+3. The static site is generated in `out/` plus `.nojekyll` and `CNAME` (copied by the postbuild script). The repo already includes an Actions workflow at `.github/workflows/deploy.yml` that builds with `npm run build`, injects `NEXT_PUBLIC_SITE_URL=https://twilingual.com`, and deploys to GitHub Pages.
 
 ### Notes
 

@@ -14,6 +14,7 @@
 
 ## Static Hosting
 - `next.config.mjs`: `output: 'export'`, `trailingSlash: true`, `basePath` driven by `NEXT_PUBLIC_BASE_PATH` (default `''` for twilingual.com).
+- `NEXT_PUBLIC_SITE_URL` defaults OAuth redirect origin; set to `https://twilingual.com` in production.
 - Build: `npm run build` → outputs static site in `out/`.
 
 ## Storage & Security

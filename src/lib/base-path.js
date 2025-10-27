@@ -6,11 +6,24 @@
  * @type {string}
  */
 const rawBase = (process.env.NEXT_PUBLIC_BASE_PATH || '').trim()
-const sanitized = rawBase
+const sanitizedBase = rawBase
   ? `/${rawBase.replace(/^\/+/, '').replace(/\/+$/, '')}`
   : ''
 
-export const BASE_PATH = sanitized === '/' ? '' : sanitized
+export const BASE_PATH = sanitizedBase === '/' ? '' : sanitizedBase
+
+const rawSite = (process.env.NEXT_PUBLIC_SITE_URL || '').trim()
+const normalizedSite = rawSite ? rawSite.replace(/\/+$/, '') : ''
+
+/**
+ * Resolve the origin (protocol + host) the app should use for OAuth callbacks.
+ * @returns {string}
+ */
+export function getSiteOrigin() {
+  if (normalizedSite) return normalizedSite
+  if (typeof window !== 'undefined' && window.location?.origin) return window.location.origin
+  return ''
+}
 
 /**
  * Prefix any relative path with the configured base path.

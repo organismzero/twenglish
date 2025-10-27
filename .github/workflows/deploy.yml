@@ -17,6 +17,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SITE_URL: https://twilingual.com
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

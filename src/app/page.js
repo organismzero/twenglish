@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { buildAuthUrl, getToken, validateToken, getClientId } from '../lib/auth'
-import { withBasePath } from '../lib/base-path'
+import { withBasePath, getSiteOrigin } from '../lib/base-path'
 import { getUser, getFollowedStreams, getFollowedChannels, getUsersByLogin } from '../lib/helix'
 import ChannelCard from '../components/ChannelCard'
 import SettingsDrawer from '../components/SettingsDrawer'
@@ -53,9 +53,7 @@ export default function HomePage() {
     })()
   }, [tokenValid])
 
-  const redirectUri = (typeof window !== 'undefined')
-    ? window.location.origin + withBasePath('/callback/')
-    : ''
+  const redirectUri = getSiteOrigin() + withBasePath('/callback/')
 
   function login() {
     const cid = getClientId()
