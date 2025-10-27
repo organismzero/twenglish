@@ -54,8 +54,7 @@ npm run dev
 
 ### Routing note
 
-- For static export compatibility, the chat view uses a query parameter instead of a dynamic segment.
-- Chat URL format: `/chat/?login=<channel_login>`
+- Chat view lives at `/chat/<channel_login>` for cleaner sharing and direct navigation.
 
 ## Customization
 

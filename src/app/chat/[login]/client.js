@@ -1,28 +1,24 @@
+/**
+ * Client-only chat view implementation to keep the dynamic channel page
+ * compatible with Next.js static export requirements.
+ */
 'use client'
 
-import { Suspense, useEffect, useRef, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { getUsersByLogin, getStreamByUserId } from '../../lib/helix'
-import { TwitchIRC } from '../../lib/irc'
-import { majorityLanguageISO1, detectISO1 } from '../../lib/detect'
-import { translateIfNeeded } from '../../lib/translate'
-import { getTargetLanguage } from '../../lib/translate/target'
-import ChatMessage from '../../components/ChatMessage'
-import SettingsDrawer from '../../components/SettingsDrawer'
+import { useEffect, useRef, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { getUsersByLogin, getStreamByUserId } from '../../../lib/helix'
+import { TwitchIRC } from '../../../lib/irc'
+import { majorityLanguageISO1, detectISO1 } from '../../../lib/detect'
+import { translateIfNeeded } from '../../../lib/translate'
+import { getTargetLanguage } from '../../../lib/translate/target'
+import ChatMessage from '../../../components/ChatMessage'
+import SettingsDrawer from '../../../components/SettingsDrawer'
+import { withBasePath } from '../../../lib/base-path'
 
-export default function ChatPage() {
-  return (
-    <Suspense fallback={<div className="card">Loading chat…</div>}>
-      <ChatPageContent />
-    </Suspense>
-  )
-}
-
-function ChatPageContent() {
-  const search = useSearchParams()
+export default function ChatPageInner() {
+  const params = useParams()
   const router = useRouter()
-  const login = (search.get('login') || '').trim()
-  const [channel, setChannel] = useState(null)
+  const login = (params?.login || '').toString().trim()
   const [primaryLang, setPrimaryLang] = useState(null)
   const [streamTags, setStreamTags] = useState([])
   const [msgs, setMsgs] = useState([])
@@ -42,7 +38,6 @@ function ChatPageContent() {
       const users = await getUsersByLogin([login])
       const u = users[0]
       if (!u) return
-      setChannel(u)
       const s = await getStreamByUserId(u.id)
       if (s) {
         const streamLang = (s.language || '').toLowerCase()
@@ -90,14 +85,14 @@ function ChatPageContent() {
 
   if (!login) {
     return (
-      <div className="card">No channel specified. Provide a channel login with the query param, e.g. <code>/chat/?login=somechannel</code>.</div>
+      <div className="card">No channel specified. Visit a chat via a path like <code>/chat/channelname</code>.</div>
     )
   }
 
   return (
     <div className="grid gap-4">
       <div className="card flex items-center gap-3">
-        <button className="btn" onClick={()=>router.push('/')}>Back to channels</button>
+        <button className="btn" onClick={()=>router.push(withBasePath('/'))}>Back to channels</button>
         <div className="w-10 h-10 rounded-xl bg-aquadark-800 grid place-items-center uppercase font-bold">{(login||'?')[0]}</div>
         <div className="flex-1 min-w-0">
           <div className="font-semibold">@{login}</div>
