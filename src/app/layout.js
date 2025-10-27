@@ -1,13 +1,20 @@
 import './globals.css'
 import { withBasePath } from '../lib/base-path'
 
+const faviconUrl = withBasePath('/icon.svg')
+
 export const metadata = {
   title: 'Twilingual',
   description: 'Live chat, any language. Translate Twitch chat in real time.',
+  icons: {
+    icon: faviconUrl,
+    shortcut: faviconUrl,
+    apple: faviconUrl,
+  },
 }
 
 export default function RootLayout({ children }) {
-  const logoSrc = withBasePath('/icon.svg')
+  const logoSrc = faviconUrl
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>

@@ -22,7 +22,7 @@ export default function ChannelCard({ stream, onJoin, href }) {
       <div className="flex items-center justify-between">
         <div className="text-xs opacity-70">{isLive ? `Live • ${viewer_count||0} viewers` : 'Offline'}</div>
         {href ? (
-          <Link className="btn btn-primary" href={href}>Join chat</Link>
+          <Link className="btn btn-primary" href={href} prefetch={false}>Join chat</Link>
         ) : (
           <button className="btn btn-primary" onClick={()=>onJoin(login)}>Join chat</button>
         )}
