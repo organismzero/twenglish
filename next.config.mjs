@@ -5,8 +5,10 @@ const normalizedBase = rawBase
   : ''
 const basePath = normalizedBase === '/' ? '' : normalizedBase
 
+const isProduction = process.env.NODE_ENV === 'production'
+
 const nextConfig = {
-  output: 'export',
+  ...(isProduction ? { output: 'export' } : {}),
   basePath,
   assetPrefix: basePath || undefined,
   images: { unoptimized: true },
