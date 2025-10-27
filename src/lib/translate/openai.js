@@ -21,21 +21,29 @@ export function getOpenAIModel() {
 }
 
 /**
- * Translate a single text to English with minimal prompt.
+ * Translate a single text into the requested target language.
  * @param {string} text
  * @param {string} sourceIso1 Detected language (e.g., 'es')
- * @returns {Promise<string>} English translation (or original on failure)
+ * @param {string} targetIso1 Requested destination language (e.g., 'en')
+ * @returns {Promise<string>} Translation (or original on failure)
  */
-export async function translateToEnglish(text, sourceIso1) {
+export async function translateToTarget(text, sourceIso1, targetIso1) {
   const key = getOpenAIKey()
   if (!key) return text
+  if (!targetIso1) return text
 
   const model = getOpenAIModel()
   const body = {
     model,
     messages: [
-      { role: 'system', content: 'You are a precise translator. Output only the English translation, no commentary.' },
-      { role: 'user', content: `Source language: ${sourceIso1 || 'unknown'}\nText: ${text}` }
+      {
+        role: 'system',
+        content: `You are a precise translator. Output only the translation into the language with ISO 639-1 code "${targetIso1}". No commentary.`,
+      },
+      {
+        role: 'user',
+        content: `Source language: ${sourceIso1 || 'unknown'}\nTarget language: ${targetIso1}\nText: ${text}`,
+      }
     ],
     temperature: 0.2,
   }

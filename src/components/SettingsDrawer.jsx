@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react'
 import { setOpenAIKey, getOpenAIKey, setOpenAIModel, getOpenAIModel } from '../lib/translate/openai'
 import { setLibreEndpoint, getLibreEndpoint, setLibreApiKey, getLibreApiKey } from '../lib/translate/libre'
 import { getProvider, setProvider } from '../lib/translate/provider'
+import { TARGET_LANGUAGES, getTargetLanguage, setTargetLanguage as persistTargetLanguage } from '../lib/translate/target'
 import { getClientId, setClientId } from '../lib/auth'
 
-export default function SettingsDrawer() {
+export default function SettingsDrawer({ onTargetLanguageChange = () => {} }) {
   const [open, setOpen] = useState(false)
   const [key, setKey] = useState('')
   const [model, setModel] = useState('gpt-4o-mini')
@@ -14,6 +15,7 @@ export default function SettingsDrawer() {
   const [provider, setProv] = useState('openai')
   const [libreEndpoint, setLEndpoint] = useState('https://libretranslate.com')
   const [libreKey, setLKey] = useState('')
+  const [targetLang, setTargetLang] = useState('en')
 
   useEffect(() => {
     setKey(getOpenAIKey())
@@ -22,6 +24,7 @@ export default function SettingsDrawer() {
     setProv(getProvider())
     setLEndpoint(getLibreEndpoint())
     setLKey(getLibreApiKey())
+    setTargetLang(getTargetLanguage())
   }, [])
 
   function save() {
@@ -31,6 +34,9 @@ export default function SettingsDrawer() {
     setClientId(clientId.trim())
     setLibreEndpoint((libreEndpoint || '').trim())
     setLibreApiKey((libreKey || '').trim())
+    const normalizedTarget = (targetLang || 'en').toLowerCase()
+    persistTargetLanguage(normalizedTarget)
+    onTargetLanguageChange(normalizedTarget)
     alert('Saved settings to session.')
     setOpen(false)
   }
@@ -62,6 +68,12 @@ export default function SettingsDrawer() {
                 <select className="input w-full" value={provider} onChange={e=>setProv(e.target.value)}>
                   <option value="openai">OpenAI</option>
                   <option value="libre">LibreTranslate</option>
+                </select>
+                <label className="block text-sm mt-3">Destination language</label>
+                <select className="input w-full" value={targetLang} onChange={e=>setTargetLang(e.target.value)}>
+                  {TARGET_LANGUAGES.map(lang => (
+                    <option key={lang.iso1} value={lang.iso1}>{lang.label}</option>
+                  ))}
                 </select>
                 {provider === 'openai' && (
                   <div className="mt-3 space-y-2">

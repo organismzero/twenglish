@@ -6,6 +6,7 @@ import { getUsersByLogin, getStreamByUserId } from '../../lib/helix'
 import { TwitchIRC } from '../../lib/irc'
 import { majorityLanguageISO1, detectISO1 } from '../../lib/detect'
 import { translateIfNeeded } from '../../lib/translate'
+import { getTargetLanguage } from '../../lib/translate/target'
 import ChatMessage from '../../components/ChatMessage'
 import SettingsDrawer from '../../components/SettingsDrawer'
 
@@ -24,10 +25,15 @@ function ChatPageContent() {
   const [primaryLang, setPrimaryLang] = useState(null)
   const [streamTags, setStreamTags] = useState([])
   const [msgs, setMsgs] = useState([])
+  const [targetLang, setTargetLang] = useState('en')
   const bufRef = useRef([])
   const seenRef = useRef(new Set())
   const ircRef = useRef(null)
   const chatContainerRef = useRef(null)
+
+  useEffect(() => {
+    setTargetLang(getTargetLanguage())
+  }, [])
 
   useEffect(() => {
     if (!login) return
@@ -38,7 +44,8 @@ function ChatPageContent() {
       setChannel(u)
       const s = await getStreamByUserId(u.id)
       if (s) {
-        setPrimaryLang(s.language || null)
+        const streamLang = (s.language || '').toLowerCase()
+        setPrimaryLang(streamLang || null)
         setStreamTags(s.tags || [])
       }
       const irc = new TwitchIRC({
@@ -47,14 +54,18 @@ function ChatPageContent() {
           const msgKey = m.id || `${m.channel}:${m.ts}:${m.user}:${m.text}`
           if (seenRef.current.has(msgKey)) return
           seenRef.current.add(msgKey)
-          const translation = await translateIfNeeded(m.text, iso1, primaryLang || (s?.language || null))
+          const fallbackPrimary = (s?.language || '').toLowerCase() || null
+          const translation = await translateIfNeeded(m.text, iso1, primaryLang || fallbackPrimary)
           const enhanced = { ...m, lang: iso1, translation, _key: msgKey }
           setMsgs(prev => [...prev.slice(-300), enhanced])
 
           bufRef.current.push({ text: m.text })
           if (bufRef.current.length > 60) bufRef.current.shift()
           const maj = majorityLanguageISO1(bufRef.current)
-          if (maj) setPrimaryLang(prev => prev || maj)
+          if (maj) {
+            const normalizedMaj = maj.toLowerCase()
+            setPrimaryLang(prev => prev || normalizedMaj)
+          }
         },
         onState: () => {}
       })
@@ -91,12 +102,16 @@ function ChatPageContent() {
           <div className="text-sm opacity-70">Primary language: <span className="badge">{(primaryLang||'unknown').toUpperCase()}</span></div>
         </div>
         <div className="hidden sm:block text-xs opacity-70">{streamTags?.slice(0,5).join(' • ')}</div>
-        <SettingsDrawer />
+        <SettingsDrawer onTargetLanguageChange={value => setTargetLang((value || 'en').toLowerCase())} />
       </div>
 
       <div className="card max-h-[70vh] overflow-y-auto" ref={chatContainerRef}>
         {msgs.map(m => (
-          <ChatMessage key={m._key || m.id || m.ts} msg={m} showOriginal={primaryLang && primaryLang !== 'en'} />
+          <ChatMessage
+            key={m._key || m.id || m.ts}
+            msg={m}
+            showOriginal={Boolean(primaryLang && targetLang && primaryLang !== targetLang)}
+          />
         ))}
       </div>
     </div>

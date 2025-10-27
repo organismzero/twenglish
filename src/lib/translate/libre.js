@@ -21,15 +21,17 @@ export function getLibreApiKey() {
 }
 
 /**
- * Translate a single text to English using LibreTranslate.
+ * Translate a single text using LibreTranslate.
  * @param {string} text
  * @param {string} sourceIso1 Detected language (e.g., 'es')
- * @returns {Promise<string>} English translation (or original on failure)
+ * @param {string} targetIso1 Requested destination language (e.g., 'en')
+ * @returns {Promise<string>} Translation (or original on failure)
  */
-export async function translateToEnglish(text, sourceIso1) {
+export async function translateToTarget(text, sourceIso1, targetIso1) {
   const endpoint = getLibreEndpoint()
   const key = getLibreApiKey()
   if (!endpoint) return text
+  const target = targetIso1 || 'en'
   try {
     const res = await fetch(endpoint.replace(/\/$/, '') + '/translate', {
       method: 'POST',
@@ -37,7 +39,7 @@ export async function translateToEnglish(text, sourceIso1) {
       body: JSON.stringify({
         q: text,
         source: sourceIso1 || 'auto',
-        target: 'en',
+        target,
         format: 'text',
         api_key: key || undefined,
       }),
@@ -54,4 +56,3 @@ export async function translateToEnglish(text, sourceIso1) {
     return text
   }
 }
-
