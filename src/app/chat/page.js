@@ -19,6 +19,7 @@ export default function ChatPage() {
   const bufRef = useRef([])
   const seenRef = useRef(new Set())
   const ircRef = useRef(null)
+  const chatContainerRef = useRef(null)
 
   useEffect(() => {
     if (!login) return
@@ -61,6 +62,12 @@ export default function ChatPage() {
     }
   }, [login])
 
+  useEffect(() => {
+    const el = chatContainerRef.current
+    if (!el) return
+    el.scrollTop = el.scrollHeight
+  }, [msgs])
+
   if (!login) {
     return (
       <div className="card">No channel specified. Provide a channel login with the query param, e.g. <code>/chat/?login=somechannel</code>.</div>
@@ -79,7 +86,7 @@ export default function ChatPage() {
         <SettingsDrawer />
       </div>
 
-      <div className="card max-h-[70vh] overflow-y-auto">
+      <div className="card max-h-[70vh] overflow-y-auto" ref={chatContainerRef}>
         {msgs.map(m => (
           <ChatMessage key={m._key || m.id || m.ts} msg={m} showOriginal={primaryLang && primaryLang !== 'en'} />
         ))}
