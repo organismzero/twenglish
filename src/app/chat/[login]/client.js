@@ -18,7 +18,9 @@ import { withBasePath } from '../../../lib/base-path'
 export default function ChatPageInner() {
   const params = useParams()
   const router = useRouter()
-  const login = (params?.login || '').toString().trim()
+  const loginParam = params?.login
+  const login = (Array.isArray(loginParam) ? loginParam[0] : loginParam || '').toString().trim()
+  const isPlaceholder = login === '__placeholder__'
   const [primaryLang, setPrimaryLang] = useState(null)
   const [streamTags, setStreamTags] = useState([])
   const [msgs, setMsgs] = useState([])
@@ -33,7 +35,7 @@ export default function ChatPageInner() {
   }, [])
 
   useEffect(() => {
-    if (!login) return
+    if (!login || isPlaceholder) return
     ;(async () => {
       const users = await getUsersByLogin([login])
       const u = users[0]
@@ -83,7 +85,7 @@ export default function ChatPageInner() {
     el.scrollTop = el.scrollHeight
   }, [msgs])
 
-  if (!login) {
+  if (!login || isPlaceholder) {
     return (
       <div className="card">No channel specified. Visit a chat via a path like <code>/chat/channelname</code>.</div>
     )
