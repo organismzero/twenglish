@@ -1,9 +1,14 @@
 /** @type {import('next').NextConfig} */
-const isProd = process.env.NODE_ENV === 'production'
+const rawBase = (process.env.NEXT_PUBLIC_BASE_PATH || '').trim()
+const normalizedBase = rawBase
+  ? `/${rawBase.replace(/^\/+/, '').replace(/\/+$/, '')}`
+  : ''
+const basePath = normalizedBase === '/' ? '' : normalizedBase
 
 const nextConfig = {
-  output: isProd ? 'export' : undefined,
-  basePath: isProd ? '/twilingual' : '',
+  output: 'export',
+  basePath,
+  assetPrefix: basePath || undefined,
   images: { unoptimized: true },
   trailingSlash: true,
 }

@@ -1,6 +1,8 @@
 # Twilingual
 
-Static Twitch chat client with automatic language detection and **OpenAI translation to English**.
+Live chat, any language. Translate Twitch chat in real time.
+
+Static Twitch chat client with automatic language detection and **OpenAI translation.**.
 
 - **Hosting:** GitHub Pages (Next.js static export)
 - **Auth:** Twitch OAuth Implicit Grant (no server)
@@ -29,12 +31,13 @@ npm run dev
    If no provider credentials are supplied, messages will not be translated.
 4. In your Twitch app, set the OAuth Redirect URLs EXACTLY (must match character-for-character):
    - Development: `http://localhost:3000/callback/`
-   - Production (GitHub Pages): `https://<your-username>.github.io/twilingual/callback/`
+   - Production (custom domain): `https://twilingual.com/callback/`
+   - If you deploy under a GitHub Pages subpath, set `NEXT_PUBLIC_BASE_PATH=/your-repo` and use `https://<your-username>.github.io/<your-repo>/callback/`
    Note: The trailing slash is required because this app uses `trailingSlash: true` and the login flow sends `/callback/`.
 
 ### Build & deploy to GitHub Pages
 
-1. In `next.config.mjs` the `basePath` is `/twilingual` when `NODE_ENV=production`.
+1. (Optional) Set `NEXT_PUBLIC_BASE_PATH` if you deploy under a subdirectory (e.g., `NEXT_PUBLIC_BASE_PATH=/your-repo`). Leave it empty for `twilingual.com`.
 2. Build (Next.js already exports static assets when `output: 'export'`):
    ```bash
    npm run build

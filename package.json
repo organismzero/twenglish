@@ -1,5 +1,6 @@
 {
   "name": "twilingual",
+  "description": "Live chat, any language. Translate Twitch chat in real time.",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -7,6 +8,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "postbuild": "node scripts/postbuild.js",
     "postinstall": "tailwindcss -v > /dev/null || echo 'Tailwind ready'"
   },
   "dependencies": {

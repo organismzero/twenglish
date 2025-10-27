@@ -3,7 +3,7 @@ import { withBasePath } from '../lib/base-path'
 
 export const metadata = {
   title: 'Twilingual',
-  description: 'Twitch chat translator (GitHub Pages)',
+  description: 'Live chat, any language. Translate Twitch chat in real time.',
 }
 
 export default function RootLayout({ children }) {
@@ -21,7 +21,7 @@ export default function RootLayout({ children }) {
           </header>
           <main className="container-max py-6">{children}</main>
           <footer className="container-max py-10 opacity-70 text-sm">
-            Built for static hosting on GitHub Pages. No server required.
+            Served statically via GitHub Pages on twilingual.com. No server required.
           </footer>
         </div>
       </body>

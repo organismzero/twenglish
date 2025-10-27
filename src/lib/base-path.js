@@ -1,9 +1,16 @@
 /**
- * Base path helpers keep GitHub Pages deployments working under `/twilingual`.
- * Next.js inlines `process.env.NODE_ENV` so this stays tree-shakeable.
+ * Base path helpers keep GitHub Pages deployments working whether the site is
+ * served from the domain root or a subdirectory. Configure via
+ * `NEXT_PUBLIC_BASE_PATH` (e.g., `/repo-name`). Next.js inlines public env vars
+ * at build time so this stays tree-shakeable.
  * @type {string}
  */
-export const BASE_PATH = process.env.NODE_ENV === 'production' ? '/twilingual' : ''
+const rawBase = (process.env.NEXT_PUBLIC_BASE_PATH || '').trim()
+const sanitized = rawBase
+  ? `/${rawBase.replace(/^\/+/, '').replace(/\/+$/, '')}`
+  : ''
+
+export const BASE_PATH = sanitized === '/' ? '' : sanitized
 
 /**
  * Prefix any relative path with the configured base path.
