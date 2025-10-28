@@ -94,7 +94,14 @@ export default function ChatPageInner() {
   return (
     <div className="grid gap-4">
       <div className="card flex items-center gap-3">
-        <button className="btn" onClick={()=>router.push(withBasePath('/'))}>Back to channels</button>
+        <button
+          className="btn w-10 h-10 rounded-full text-lg leading-none"
+          type="button"
+          aria-label="Back to channels"
+          onClick={()=>router.push(withBasePath('/'))}
+        >
+          ←
+        </button>
         <div className="w-10 h-10 rounded-xl bg-aquadark-800 grid place-items-center uppercase font-bold">{(login||'?')[0]}</div>
         <div className="flex-1 min-w-0">
           <div className="font-semibold">@{login}</div>
