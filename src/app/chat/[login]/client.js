@@ -54,7 +54,13 @@ export default function ChatPageInner() {
           seenRef.current.add(msgKey)
           const fallbackPrimary = (s?.language || '').toLowerCase() || null
           const translation = await translateIfNeeded(m.text, iso1, primaryLang || fallbackPrimary)
-          const enhanced = { ...m, lang: iso1, translation, _key: msgKey }
+          const enhanced = {
+            ...m,
+            ts: Number(m.ts || m.tags?.['tmi-sent-ts'] || Date.now()),
+            lang: iso1,
+            translation,
+            _key: msgKey,
+          }
           setMsgs(prev => [...prev.slice(-300), enhanced])
 
           bufRef.current.push({ text: m.text })
@@ -112,11 +118,12 @@ export default function ChatPageInner() {
       </div>
 
       <div className="card max-h-[70vh] overflow-y-auto" ref={chatContainerRef}>
-        {msgs.map(m => (
+        {msgs.map((m, idx) => (
           <ChatMessage
             key={m._key || m.id || m.ts}
             msg={m}
             showOriginal={Boolean(primaryLang && targetLang && primaryLang !== targetLang)}
+            index={idx}
           />
         ))}
       </div>
