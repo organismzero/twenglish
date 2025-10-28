@@ -29,6 +29,7 @@ export default function ChatPageInner() {
   const isPlaceholder = !login
   const [primaryLang, setPrimaryLang] = useState(null)
   const [streamTags, setStreamTags] = useState([])
+  const [streamTitle, setStreamTitle] = useState('')
   const [msgs, setMsgs] = useState([])
   const [targetLang, setTargetLang] = useState('en')
   const [avatarUrl, setAvatarUrl] = useState('')
@@ -72,6 +73,7 @@ export default function ChatPageInner() {
         const streamLang = (s.language || '').toLowerCase()
         setPrimaryLang(streamLang || null)
         setStreamTags(s.tags || [])
+        setStreamTitle(s.title || '')
       }
       const irc = new TwitchIRC({
         onMessage: async (m) => {
@@ -110,6 +112,7 @@ export default function ChatPageInner() {
       seenRef.current.clear()
       bufRef.current = []
       setAvatarUrl('')
+      setStreamTitle('')
     }
   }, [login])
 
@@ -127,33 +130,36 @@ export default function ChatPageInner() {
 
   return (
     <div className="grid gap-4">
-      <div className="card flex items-center gap-3">
-        <button
-          className="btn w-10 h-10 rounded-full text-lg leading-none"
-          type="button"
-          aria-label="Back to channels"
-          onClick={()=>router.push(withBasePath('/'))}
-        >
-          ←
-        </button>
-        {avatarUrl ? (
-          <img
-            src={avatarUrl}
-            alt={`${login} avatar`}
-            className="w-12 h-12 rounded-2xl object-cover border border-aquadark-700"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-12 h-12 rounded-2xl bg-aquadark-800 grid place-items-center uppercase font-bold text-lg">
-            {(login||'?')[0]}
+      <div className="card space-y-3">
+        <div className="text-lg font-semibold truncate">{streamTitle || 'Live stream'}</div>
+        <div className="flex items-center gap-3">
+          <button
+            className="btn w-10 h-10 rounded-full text-lg leading-none"
+            type="button"
+            aria-label="Back to channels"
+            onClick={()=>router.push(withBasePath('/'))}
+          >
+            ←
+          </button>
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={`${login} avatar`}
+              className="w-12 h-12 rounded-2xl object-cover border border-aquadark-700"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-2xl bg-aquadark-800 grid place-items-center uppercase font-bold text-lg">
+              {(login||'?')[0]}
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold">@{login}</div>
+            <div className="text-sm opacity-70">Primary language: <span className="badge">{(primaryLang||'unknown').toUpperCase()}</span></div>
           </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <div className="font-semibold">@{login}</div>
-          <div className="text-sm opacity-70">Primary language: <span className="badge">{(primaryLang||'unknown').toUpperCase()}</span></div>
+          <div className="hidden sm:block text-xs opacity-70">{streamTags?.slice(0,5).join(' • ')}</div>
+          <SettingsDrawer onTargetLanguageChange={value => setTargetLang((value || 'en').toLowerCase())} />
         </div>
-        <div className="hidden sm:block text-xs opacity-70">{streamTags?.slice(0,5).join(' • ')}</div>
-        <SettingsDrawer onTargetLanguageChange={value => setTargetLang((value || 'en').toLowerCase())} />
       </div>
 
       <div className="card max-h-[70vh] overflow-y-auto" ref={chatContainerRef}>
