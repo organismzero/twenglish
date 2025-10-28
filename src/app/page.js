@@ -32,7 +32,15 @@ export default function HomePage() {
       setUser(u)
       // Live followed streams
       const fl = await getFollowedStreams(u.id, 100)
-      setStreams(fl.data || [])
+      const liveStreams = fl.data || []
+      const liveLogins = liveStreams.map(s => s.user_login).filter(Boolean)
+      const liveUsers = liveLogins.length ? await getUsersByLogin(liveLogins) : []
+      const liveByLogin = Object.fromEntries(liveUsers.map(user => [user.login, user]))
+      const liveNormalized = liveStreams.map(s => ({
+        ...s,
+        profile_image_url: liveByLogin[s.user_login]?.profile_image_url || null,
+      }))
+      setStreams(liveNormalized)
       // All followed channels (first page)
       const ch = await getFollowedChannels(u.id, 100)
       // hydrate user_login for channels (broadcaster_id -> login)
@@ -46,7 +54,8 @@ export default function HomePage() {
         language: x.broadcaster_language,
         viewer_count: 0,
         type: null,
-        user_id: byLogin[x.broadcaster_login]?.id
+        user_id: byLogin[x.broadcaster_login]?.id,
+        profile_image_url: byLogin[x.broadcaster_login]?.profile_image_url || null,
       }))
       setChannels(normalized)
       setLoading(false)

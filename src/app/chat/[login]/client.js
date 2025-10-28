@@ -31,6 +31,7 @@ export default function ChatPageInner() {
   const [streamTags, setStreamTags] = useState([])
   const [msgs, setMsgs] = useState([])
   const [targetLang, setTargetLang] = useState('en')
+  const [avatarUrl, setAvatarUrl] = useState('')
   const bufRef = useRef([])
   const seenRef = useRef(new Set())
   const ircRef = useRef(null)
@@ -65,6 +66,7 @@ export default function ChatPageInner() {
       const users = await getUsersByLogin([login])
       const u = users[0]
       if (!u) return
+      setAvatarUrl(u.profile_image_url || '')
       const s = await getStreamByUserId(u.id)
       if (s) {
         const streamLang = (s.language || '').toLowerCase()
@@ -107,6 +109,7 @@ export default function ChatPageInner() {
       ircRef.current = null
       seenRef.current.clear()
       bufRef.current = []
+      setAvatarUrl('')
     }
   }, [login])
 
@@ -133,7 +136,18 @@ export default function ChatPageInner() {
         >
           ←
         </button>
-        <div className="w-10 h-10 rounded-xl bg-aquadark-800 grid place-items-center uppercase font-bold">{(login||'?')[0]}</div>
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt={`${login} avatar`}
+            className="w-12 h-12 rounded-2xl object-cover border border-aquadark-700"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-2xl bg-aquadark-800 grid place-items-center uppercase font-bold text-lg">
+            {(login||'?')[0]}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <div className="font-semibold">@{login}</div>
           <div className="text-sm opacity-70">Primary language: <span className="badge">{(primaryLang||'unknown').toUpperCase()}</span></div>
