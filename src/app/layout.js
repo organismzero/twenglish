@@ -26,7 +26,7 @@ export default function RootLayout({ children }) {
               <Link href={withBasePath('/')} prefetch={false} className="text-lg font-semibold hover:opacity-80 transition-opacity">
                 Twilingual
               </Link>
-              <div className="ml-auto text-sm opacity-70">Dark aquamarine</div>
+              {/* <div className="ml-auto text-sm opacity-70">Dark aquamarine</div> */}
             </div>
           </header>
           <main className="container-max py-6">{children}</main>
