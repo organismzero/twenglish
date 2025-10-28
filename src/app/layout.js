@@ -30,8 +30,19 @@ export default function RootLayout({ children }) {
             </div>
           </header>
           <main className="container-max py-6">{children}</main>
-          <footer className="container-max py-10 opacity-70 text-sm">
-            Served statically via GitHub Pages on twilingual.com. No server required.
+          <footer className="container-max py-10 opacity-70 text-sm space-y-2">
+            <div>Served statically via GitHub Pages on twilingual.com. No server required.</div>
+            <div>
+              A collaboration between{' '}
+              <a
+                href="https://twitch.com/organismzero"
+                target="_blank"
+                rel="noreferrer"
+                className="underline hover:opacity-80"
+              >
+                OrganismZero
+              </a>{' '}and AI.
+            </div>
           </footer>
         </div>
       </body>
