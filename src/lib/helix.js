@@ -54,3 +54,8 @@ export async function getStreamTags(broadcaster_id) {
   const s = await getStreamByUserId(broadcaster_id)
   return s?.tags || []
 }
+
+export async function getGlobalEmotes(after) {
+  const data = await helix('/chat/emotes/global', after ? { after } : {})
+  return data
+}

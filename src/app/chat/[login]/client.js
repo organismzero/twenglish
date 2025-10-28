@@ -11,9 +11,60 @@ import { TwitchIRC } from '../../../lib/irc'
 import { majorityLanguageISO1, detectISO1 } from '../../../lib/detect'
 import { translateIfNeeded } from '../../../lib/translate'
 import { getTargetLanguage } from '../../../lib/translate/target'
+import { getCachedEmotes, mapEmotesByCode, tokenizeMessage } from '../../../lib/emotes'
 import ChatMessage from '../../../components/ChatMessage'
 import SettingsDrawer from '../../../components/SettingsDrawer'
 import { withBasePath } from '../../../lib/base-path'
+
+function mergeTranslationTokens(tokens = [], translationText = '') {
+  if (!translationText) return tokens
+  const textTokenIndices = []
+  let totalOriginalLength = 0
+  tokens.forEach((token, idx) => {
+    if (token?.type === 'text') {
+      textTokenIndices.push(idx)
+      totalOriginalLength += token.value?.length || 0
+    }
+  })
+
+  if (textTokenIndices.length === 0) {
+    return [{ type: 'text', value: translationText }, ...tokens.filter(t => t?.type === 'emote')]
+  }
+
+  let remainingText = translationText
+  let remainingOriginal = totalOriginalLength
+  const result = tokens.map(token => ({ ...token }))
+
+  textTokenIndices.forEach((index, position) => {
+    const token = result[index]
+    const originalLength = token.value?.length || 0
+    const isLast = position === textTokenIndices.length - 1
+    if (isLast) {
+      token.value = remainingText
+      remainingText = ''
+      return
+    }
+    if (remainingOriginal <= 0 || !remainingText.length) {
+      token.value = ''
+      return
+    }
+    const remainingLength = remainingText.length
+    const sliceLength = Math.max(
+      0,
+      Math.round((originalLength / remainingOriginal) * remainingLength)
+    )
+    const take = Math.min(sliceLength, remainingText.length)
+    token.value = remainingText.slice(0, take)
+    remainingText = remainingText.slice(take)
+    remainingOriginal -= originalLength
+  })
+
+  if (remainingText) {
+    result.push({ type: 'text', value: remainingText })
+  }
+
+  return result
+}
 
 export default function ChatPageInner() {
   const params = useParams()
@@ -33,10 +84,12 @@ export default function ChatPageInner() {
   const [msgs, setMsgs] = useState([])
   const [targetLang, setTargetLang] = useState('en')
   const [avatarUrl, setAvatarUrl] = useState('')
+  const [emoteMap, setEmoteMap] = useState({})
   const bufRef = useRef([])
   const seenRef = useRef(new Set())
   const ircRef = useRef(null)
   const chatContainerRef = useRef(null)
+  const emoteMapRef = useRef({})
 
   useEffect(() => {
     const nextLogin = paramValue && paramValue !== '__placeholder__' ? paramValue : queryValue
@@ -62,6 +115,16 @@ export default function ChatPageInner() {
   }, [])
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    const current = mapEmotesByCode(getCachedEmotes())
+    setEmoteMap(current)
+  }, [])
+
+  useEffect(() => {
+    emoteMapRef.current = emoteMap
+  }, [emoteMap])
+
+  useEffect(() => {
     if (!login || isPlaceholder) return
     ;(async () => {
       const users = await getUsersByLogin([login])
@@ -77,22 +140,32 @@ export default function ChatPageInner() {
       }
       const irc = new TwitchIRC({
         onMessage: async (m) => {
+          const { textValue, tokens } = tokenizeMessage(m.text, emoteMapRef.current || {})
           const iso1 = detectISO1(m.text)
           const msgKey = m.id || `${m.channel}:${m.ts}:${m.user}:${m.text}`
           if (seenRef.current.has(msgKey)) return
           seenRef.current.add(msgKey)
           const fallbackPrimary = (s?.language || '').toLowerCase() || null
-          const translation = await translateIfNeeded(m.text, iso1, primaryLang || fallbackPrimary)
+          let translationText = ''
+          if (textValue) {
+            translationText = await translateIfNeeded(textValue, iso1, primaryLang || fallbackPrimary)
+          }
+          const translationTokens = translationText
+            ? mergeTranslationTokens(tokens, translationText)
+            : tokens
           const enhanced = {
             ...m,
             ts: Number(m.ts || m.tags?.['tmi-sent-ts'] || Date.now()),
             lang: iso1,
-            translation,
+            translationText,
+            tokens,
+            translationTokens,
+            plainText: textValue,
             _key: msgKey,
           }
           setMsgs(prev => [...prev.slice(-300), enhanced])
 
-          bufRef.current.push({ text: m.text })
+          bufRef.current.push({ text: textValue || m.text })
           if (bufRef.current.length > 60) bufRef.current.shift()
           const maj = majorityLanguageISO1(bufRef.current)
           if (maj) {

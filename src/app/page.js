@@ -4,10 +4,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { buildAuthUrl, getToken, validateToken, getClientId } from '../lib/auth'
 import { withBasePath, getSiteOrigin } from '../lib/base-path'
-import { getUser, getFollowedStreams, getFollowedChannels, getUsersByLogin } from '../lib/helix'
+import { getUser, getFollowedStreams, getFollowedChannels, getUsersByLogin, getGlobalEmotes } from '../lib/helix'
 import ChannelCard from '../components/ChannelCard'
 import SettingsDrawer from '../components/SettingsDrawer'
-import Link from 'next/link'
 import { TARGET_LANGUAGES } from '../lib/translate/target'
 
 export default function HomePage() {
@@ -19,6 +18,53 @@ export default function HomePage() {
   const [tab, setTab] = useState('live')
   const [loading, setLoading] = useState(false)
   const [languageFilter, setLanguageFilter] = useState('all')
+
+  useEffect(() => {
+    if (!tokenValid) return
+    if (typeof window === 'undefined') return
+
+    const STORAGE_KEY = 'twilingual_global_emotes'
+    const TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
+
+    const raw = window.localStorage.getItem(STORAGE_KEY)
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw)
+        const ts = parsed?.generatedAt ? new Date(parsed.generatedAt).getTime() : 0
+        if (ts && Date.now() - ts < TTL_MS && Array.isArray(parsed?.emotes)) {
+          return
+        }
+      } catch {}
+    }
+
+    let cancelled = false
+    async function hydrateEmotes() {
+      try {
+        const all = []
+        let cursor = undefined
+        do {
+          const page = await getGlobalEmotes(cursor)
+          if (!page) break
+          if (Array.isArray(page.data)) all.push(...page.data)
+          cursor = page.pagination?.cursor || undefined
+        } while (cursor)
+        if (cancelled || !all.length) return
+        window.localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            generatedAt: new Date().toISOString(),
+            emotes: all,
+          })
+        )
+      } catch (err) {
+        console.warn('Failed to cache Twitch global emotes', err)
+      }
+    }
+    hydrateEmotes()
+    return () => {
+      cancelled = true
+    }
+  }, [tokenValid])
 
   useEffect(() => {
     const token = getToken()
