@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import './globals.css'
 import { withBasePath } from '../lib/base-path'
 
@@ -22,7 +23,9 @@ export default function RootLayout({ children }) {
           <header className="border-b border-aquadark-800">
             <div className="container-max flex items-center gap-4 py-4">
               <img src={logoSrc} alt="logo" className="w-8 h-8 rounded-lg" />
-              <div className="text-lg font-semibold">Twilingual</div>
+              <Link href={withBasePath('/')} prefetch={false} className="text-lg font-semibold hover:opacity-80 transition-opacity">
+                Twilingual
+              </Link>
               <div className="ml-auto text-sm opacity-70">Dark aquamarine</div>
             </div>
           </header>
