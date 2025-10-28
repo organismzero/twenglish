@@ -30,4 +30,13 @@ if (existsSync(outDir)) {
     // eslint-disable-next-line no-console
     console.log('Created .nojekyll in out/')
   }
+
+  const indexHtml = join(outDir, 'index.html')
+  const notFoundHtml = join(outDir, '404.html')
+  if (existsSync(indexHtml)) {
+    ensureDir(dirname(notFoundHtml))
+    copyFileSync(indexHtml, notFoundHtml)
+    // eslint-disable-next-line no-console
+    console.log('Copied index.html to 404.html for SPA fallback')
+  }
 }
