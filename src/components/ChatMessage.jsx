@@ -21,22 +21,20 @@ export default function ChatMessage({ msg, showOriginal, index = 0 }) {
 
   return (
     <div className={`rounded-lg px-3 py-2 transition-colors ${rowClass}`}>
-      <div className="flex items-start gap-3">
-        <span className="text-xs opacity-60 tabular-nums select-none">{timestamp}</span>
-        <div className="flex-1">
-          <div className="flex gap-2">
-            <div className="font-semibold truncate">{msg.user}</div>
-            <div className="opacity-80">:</div>
-            <div className="flex-1">
-              {msg.translation ? (
-                <div>
-                  <div>{msg.translation}</div>
-                  {showOriginal && <div className="text-xs opacity-60 mt-0.5">{msg.text}</div>}
-                </div>
-              ) : (
-                <div>{msg.text}</div>
-              )}
-            </div>
+      <div className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1 items-center">
+        <span className="text-xs opacity-60 tabular-nums select-none leading-tight">{timestamp}</span>
+        <div className="flex items-baseline gap-2">
+          <div className="font-semibold truncate">{msg.user}</div>
+          <div className="opacity-80">:</div>
+          <div className="flex-1 leading-relaxed">
+            {msg.translation ? (
+              <div>
+                <div>{msg.translation}</div>
+                {showOriginal && <div className="text-xs opacity-60 mt-0.5">{msg.text}</div>}
+              </div>
+            ) : (
+              <div>{msg.text}</div>
+            )}
           </div>
         </div>
       </div>
