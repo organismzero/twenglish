@@ -33,7 +33,7 @@ if (existsSync(outDir)) {
 
   const indexHtml = join(outDir, 'index.html')
   const notFoundHtml = join(outDir, '404.html')
-  if (existsSync(indexHtml)) {
+  if (existsSync(indexHtml) && !existsSync(notFoundHtml)) {
     ensureDir(dirname(notFoundHtml))
     copyFileSync(indexHtml, notFoundHtml)
     // eslint-disable-next-line no-console

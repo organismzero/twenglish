@@ -96,7 +96,11 @@ export default function HomePage() {
               {streams.map(s => {
                 const login = s.user_login
                 return (
-                  <ChannelCard key={s.id + s.user_login} stream={s} href={withBasePath(`/chat/${login}/`)} />
+                  <ChannelCard
+                    key={s.id + s.user_login}
+                    stream={s}
+                    href={{ pathname: '/chat/__placeholder__', query: { login } }}
+                  />
                 )
               })}
               {streams.length===0 && <div className="opacity-70">No live followed streams.</div>}
@@ -108,7 +112,11 @@ export default function HomePage() {
               {channels.map(s => {
                 const login = s.user_login
                 return (
-                  <ChannelCard key={s.user_id + s.user_login} stream={s} href={withBasePath(`/chat/${login}/`)} />
+                  <ChannelCard
+                    key={s.user_id + s.user_login}
+                    stream={s}
+                    href={{ pathname: '/chat/__placeholder__', query: { login } }}
+                  />
                 )
               })}
               {channels.length===0 && <div className="opacity-70">No followed channels.</div>}

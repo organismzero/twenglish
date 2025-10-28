@@ -4,8 +4,8 @@
  */
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { getUsersByLogin, getStreamByUserId } from '../../../lib/helix'
 import { TwitchIRC } from '../../../lib/irc'
 import { majorityLanguageISO1, detectISO1 } from '../../../lib/detect'
@@ -17,10 +17,16 @@ import { withBasePath } from '../../../lib/base-path'
 
 export default function ChatPageInner() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const router = useRouter()
-  const loginParam = params?.login
-  const login = (Array.isArray(loginParam) ? loginParam[0] : loginParam || '').toString().trim()
-  const isPlaceholder = login === '__placeholder__'
+  const paramValue = useMemo(() => {
+    const raw = Array.isArray(params?.login) ? params?.login?.[0] : params?.login
+    return (raw || '').toString().trim()
+  }, [params])
+  const queryValue = (searchParams?.get('login') || '').trim()
+  const initialLogin = paramValue && paramValue !== '__placeholder__' ? paramValue : queryValue
+  const [login, setLogin] = useState(initialLogin)
+  const isPlaceholder = !login
   const [primaryLang, setPrimaryLang] = useState(null)
   const [streamTags, setStreamTags] = useState([])
   const [msgs, setMsgs] = useState([])
@@ -29,6 +35,25 @@ export default function ChatPageInner() {
   const seenRef = useRef(new Set())
   const ircRef = useRef(null)
   const chatContainerRef = useRef(null)
+
+  useEffect(() => {
+    const nextLogin = paramValue && paramValue !== '__placeholder__' ? paramValue : queryValue
+    if (nextLogin && nextLogin !== login) {
+      setLogin(nextLogin)
+    }
+  }, [paramValue, queryValue, login])
+
+  useEffect(() => {
+    if (!login) return
+    if (typeof window === 'undefined') return
+    const prettyPath = withBasePath(`/chat/${login}/`)
+    const currentPath = window.location.pathname.endsWith('/')
+      ? window.location.pathname
+      : window.location.pathname + '/'
+    if (currentPath !== prettyPath) {
+      window.history.replaceState(null, '', prettyPath + window.location.hash)
+    }
+  }, [login])
 
   useEffect(() => {
     setTargetLang(getTargetLanguage())
