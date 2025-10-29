@@ -1,6 +1,6 @@
 /**
  * Target language selection utilities.
- * All state is persisted in sessionStorage to stay browser-scoped.
+ * All state is persisted in localStorage to survive browser restarts.
  */
 
 /**
@@ -72,14 +72,25 @@ export const TARGET_LANGUAGES = [
 
 const TARGET_LANGUAGE_KEY = 'twen_translate_target'
 
+function getStorage() {
+  if (typeof window === 'undefined') return null
+  try {
+    return window.localStorage
+  } catch {
+    return null
+  }
+}
+
 /**
  * Persist a supported target language, defaulting to English when unknown.
  * @param {string} iso1 Two-letter ISO 639-1 code requested by the user.
  */
 export function setTargetLanguage(iso1) {
-  if (!iso1 || typeof window === 'undefined') return
+  if (!iso1) return
+  const storage = getStorage()
+  if (!storage) return
   const supported = TARGET_LANGUAGES.some(lang => lang.iso1 === iso1)
-  sessionStorage.setItem(TARGET_LANGUAGE_KEY, supported ? iso1 : 'en')
+  storage.setItem(TARGET_LANGUAGE_KEY, supported ? iso1 : 'en')
 }
 
 /**
@@ -87,8 +98,8 @@ export function setTargetLanguage(iso1) {
  * @returns {string}
  */
 export function getTargetLanguage() {
-  if (typeof window === 'undefined') return 'en'
-  const stored = sessionStorage.getItem(TARGET_LANGUAGE_KEY)
+  const storage = getStorage()
+  if (!storage) return 'en'
+  const stored = storage.getItem(TARGET_LANGUAGE_KEY)
   return stored && TARGET_LANGUAGES.some(lang => lang.iso1 === stored) ? stored : 'en'
 }
-

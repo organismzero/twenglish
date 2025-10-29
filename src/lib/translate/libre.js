@@ -1,26 +1,54 @@
 /**
  * LibreTranslate adapter (browser-side).
  * Users provide endpoint and optional API key via Settings.
+ * Secrets are cached in sessionStorage and mirrored in the encrypted secure store.
  * Default endpoint: https://libretranslate.com
  */
+
+import { getSecureSetting } from '../storage/secure'
 
 const ENDPOINT_KEY = 'twen_libre_endpoint'
 const API_KEY_KEY = 'twen_libre_key'
 
 export function setLibreEndpoint(url) {
-  if (url) sessionStorage.setItem(ENDPOINT_KEY, url)
+  if (typeof window === 'undefined') return
+  if (url) {
+    sessionStorage.setItem(ENDPOINT_KEY, url)
+  } else {
+    sessionStorage.removeItem(ENDPOINT_KEY)
+  }
 }
 export function getLibreEndpoint() {
-  return sessionStorage.getItem(ENDPOINT_KEY) || 'https://libretranslate.com'
+  if (typeof window === 'undefined') return 'https://libretranslate.com'
+  const sessionValue = sessionStorage.getItem(ENDPOINT_KEY)
+  if (sessionValue) return sessionValue
+  const secureValue = getSecureSetting('libreEndpoint')
+  if (secureValue) {
+    sessionStorage.setItem(ENDPOINT_KEY, secureValue)
+    return secureValue
+  }
+  return 'https://libretranslate.com'
 }
 export function setLibreApiKey(key) {
-  if (key) sessionStorage.setItem(API_KEY_KEY, key)
+  if (typeof window === 'undefined') return
+  if (key) {
+    sessionStorage.setItem(API_KEY_KEY, key)
+  } else {
+    sessionStorage.removeItem(API_KEY_KEY)
+  }
 }
 export function getLibreApiKey() {
-  return sessionStorage.getItem(API_KEY_KEY) || ''
+  if (typeof window === 'undefined') return ''
+  const sessionValue = sessionStorage.getItem(API_KEY_KEY)
+  if (sessionValue) return sessionValue
+  const secureValue = getSecureSetting('libreKey')
+  if (secureValue) {
+    sessionStorage.setItem(API_KEY_KEY, secureValue)
+  }
+  return secureValue || ''
 }
 
-/**
+/** 
  * Translate a single text using LibreTranslate.
  * @param {string} text
  * @param {string} sourceIso1 Detected language (e.g., 'es')

@@ -1,26 +1,53 @@
 /**
  * OpenAI translation adapter (browser-side).
  * SECURITY: Requires the user to provide their own OpenAI API key in Settings.
- * The key is stored in sessionStorage and used only from their browser.
+ * Credentials are cached in sessionStorage for runtime use and mirrored in the encrypted secure store when available.
  */
+
+import { getSecureSetting } from '../storage/secure'
 
 const OPENAI_KEY_KEY = 'twen_openai_key'
 const OPENAI_MODEL_KEY = 'twen_openai_model'
 
 export function setOpenAIKey(key) {
-  if (key) sessionStorage.setItem(OPENAI_KEY_KEY, key)
+  if (typeof window === 'undefined') return
+  if (key) {
+    sessionStorage.setItem(OPENAI_KEY_KEY, key)
+  } else {
+    sessionStorage.removeItem(OPENAI_KEY_KEY)
+  }
 }
 export function getOpenAIKey() {
-  return sessionStorage.getItem(OPENAI_KEY_KEY) || ''
+  if (typeof window === 'undefined') return ''
+  const sessionValue = sessionStorage.getItem(OPENAI_KEY_KEY)
+  if (sessionValue) return sessionValue
+  const secureValue = getSecureSetting('openaiKey')
+  if (secureValue) {
+    sessionStorage.setItem(OPENAI_KEY_KEY, secureValue)
+  }
+  return secureValue || ''
 }
 export function setOpenAIModel(m) {
-  if (m) sessionStorage.setItem(OPENAI_MODEL_KEY, m)
+  if (typeof window === 'undefined') return
+  if (m) {
+    sessionStorage.setItem(OPENAI_MODEL_KEY, m)
+  } else {
+    sessionStorage.removeItem(OPENAI_MODEL_KEY)
+  }
 }
 export function getOpenAIModel() {
-  return sessionStorage.getItem(OPENAI_MODEL_KEY) || 'gpt-4o-mini'
+  if (typeof window === 'undefined') return 'gpt-4o-mini'
+  const sessionValue = sessionStorage.getItem(OPENAI_MODEL_KEY)
+  if (sessionValue) return sessionValue
+  const secureValue = getSecureSetting('openaiModel')
+  if (secureValue) {
+    sessionStorage.setItem(OPENAI_MODEL_KEY, secureValue)
+    return secureValue
+  }
+  return 'gpt-4o-mini'
 }
 
-/**
+/** 
  * Translate a single text into the requested target language.
  * @param {string} text
  * @param {string} sourceIso1 Detected language (e.g., 'es')

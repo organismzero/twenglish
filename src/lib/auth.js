@@ -3,18 +3,31 @@
  * Stores token in sessionStorage under 'twen_token'.
  */
 
+import { getSecureSetting } from './storage/secure'
+
 const TWITCH_AUTH_BASE = 'https://id.twitch.tv/oauth2/authorize'
 const TWITCH_VALIDATE = 'https://id.twitch.tv/oauth2/validate'
 
 export function getClientId() {
   // Client ID is provided via runtime config UI (settings) and stored in sessionStorage.
   if (typeof window === 'undefined') return ''
-  return sessionStorage.getItem('twen_twitch_client_id') || ''
+  const sessionValue = sessionStorage.getItem('twen_twitch_client_id')
+  if (sessionValue) return sessionValue
+  const secureValue = getSecureSetting('twitchClientId')
+  if (secureValue) {
+    sessionStorage.setItem('twen_twitch_client_id', secureValue)
+    return secureValue
+  }
+  return ''
 }
 
 export function setClientId(id) {
   if (typeof window === 'undefined') return
-  sessionStorage.setItem('twen_twitch_client_id', id || '')
+  if (id) {
+    sessionStorage.setItem('twen_twitch_client_id', id)
+  } else {
+    sessionStorage.removeItem('twen_twitch_client_id')
+  }
 }
 
 export function getToken() {
