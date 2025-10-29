@@ -175,7 +175,11 @@ export default function ChatPageInner() {
       await buildEmoteMap(u.id, viewerId)
       const irc = new TwitchIRC({
         onMessage: async (m) => {
-          const { textValue, tokens } = tokenizeMessage(m.text, emoteMapRef.current || {})
+          const { textValue, tokens } = tokenizeMessage(
+            m.text,
+            emoteMapRef.current || {},
+            { emoteTag: m.tags?.emotes }
+          )
           const iso1 = detectISO1(m.text)
           const msgKey = m.id || `${m.channel}:${m.ts}:${m.user}:${m.text}`
           if (seenRef.current.has(msgKey)) return
