@@ -45,10 +45,22 @@ export function clearToken() {
   sessionStorage.removeItem('twen_token')
 }
 
+function generateSecureState() {
+  if (typeof window === 'undefined') return ''
+  const crypto = window.crypto && window.crypto.getRandomValues ? window.crypto : null
+  if (!crypto) {
+    console.warn('Secure random generator unavailable; falling back to less secure state token.')
+    return Math.random().toString(36).slice(2)
+  }
+  const bytes = new Uint8Array(32)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
 export function buildAuthUrl({ redirectUri, scopes=['chat:read','user:read:follows','user:read:emotes'] }) {
   if (typeof window === 'undefined') return ''
   const client_id = getClientId()
-  const state = Math.random().toString(36).slice(2)
+  const state = generateSecureState()
   sessionStorage.setItem('twen_oauth_state', state)
   const url = new URL(TWITCH_AUTH_BASE)
   url.searchParams.set('client_id', client_id)
