@@ -26,11 +26,8 @@ export default function ChatMessage({ msg, showOriginal, index = 0 }) {
     list.map((token, idx) => {
       if (!token) return null
       if (token.type === 'emote') {
-        const url =
-          token.emote?.images?.url_2x ||
-          token.emote?.images?.url_1x ||
-          token.emote?.images?.url_4x ||
-          ''
+        const images = token.emote?.images || {}
+        const url = images.url_2x || images.url_3x || images.url_1x || images.url_4x || ''
         if (!url) return <span key={`${keyPrefix}-text-${idx}`}>{token.value}</span>
         return (
           <img

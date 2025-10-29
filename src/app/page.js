@@ -8,6 +8,12 @@ import { getUser, getFollowedStreams, getFollowedChannels, getUsersByLogin, getG
 import ChannelCard from '../components/ChannelCard'
 import SettingsDrawer from '../components/SettingsDrawer'
 import { TARGET_LANGUAGES } from '../lib/translate/target'
+import {
+  getEmoteEntry,
+  setCachedEmotes,
+  fetchBTTVGlobalEmotes,
+  fetchSevenTVGlobalEmotes,
+} from '../lib/emotes'
 
 export default function HomePage() {
   const router = useRouter()
@@ -23,39 +29,12 @@ export default function HomePage() {
     if (!tokenValid) return
     if (typeof window === 'undefined') return
 
-    const STORAGE_KEY = 'twilingual_global_emotes'
-    const TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
-
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw)
-        const ts = parsed?.generatedAt ? new Date(parsed.generatedAt).getTime() : 0
-        if (ts && Date.now() - ts < TTL_MS && Array.isArray(parsed?.emotes)) {
-          return
-        }
-      } catch {}
-    }
-
     let cancelled = false
     async function hydrateEmotes() {
       try {
-        const all = []
-        let cursor = undefined
-        do {
-          const page = await getGlobalEmotes(cursor)
-          if (!page) break
-          if (Array.isArray(page.data)) all.push(...page.data)
-          cursor = page.pagination?.cursor || undefined
-        } while (cursor)
-        if (cancelled || !all.length) return
-        window.localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify({
-            generatedAt: new Date().toISOString(),
-            emotes: all,
-          })
-        )
+        await ensureTwitchGlobalEmotes(cancelled)
+        await ensureBTTVGlobalEmotes(cancelled)
+        await ensureSevenTVGlobalEmotes(cancelled)
       } catch (err) {
         console.warn('Failed to cache Twitch global emotes', err)
       }
@@ -218,4 +197,33 @@ export default function HomePage() {
       )}
     </div>
   )
+}
+async function ensureTwitchGlobalEmotes(cancelled) {
+  if (getEmoteEntry('twitch')) return
+  const all = []
+  let cursor
+  do {
+    const page = await getGlobalEmotes(cursor)
+    if (!page) break
+    if (Array.isArray(page.data)) all.push(...page.data)
+    cursor = page.pagination?.cursor || undefined
+  } while (cursor)
+  if (cancelled || !all.length) return
+  setCachedEmotes('twitch', all)
+}
+
+async function ensureBTTVGlobalEmotes(cancelled) {
+  if (getEmoteEntry('bttv-global')) return
+  const emotes = await fetchBTTVGlobalEmotes()
+  if (!cancelled && emotes.length) {
+    setCachedEmotes('bttv-global', emotes)
+  }
+}
+
+async function ensureSevenTVGlobalEmotes(cancelled) {
+  if (getEmoteEntry('7tv-global')) return
+  const emotes = await fetchSevenTVGlobalEmotes()
+  if (!cancelled && emotes.length) {
+    setCachedEmotes('7tv-global', emotes)
+  }
 }

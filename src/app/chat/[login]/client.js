@@ -4,67 +4,30 @@
  */
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { getUsersByLogin, getStreamByUserId } from '../../../lib/helix'
+import { getUsersByLogin, getStreamByUserId, getGlobalEmotes } from '../../../lib/helix'
 import { TwitchIRC } from '../../../lib/irc'
 import { majorityLanguageISO1, detectISO1 } from '../../../lib/detect'
 import { translateIfNeeded } from '../../../lib/translate'
 import { getTargetLanguage } from '../../../lib/translate/target'
-import { getCachedEmotes, mapEmotesByCode, tokenizeMessage } from '../../../lib/emotes'
+import {
+  getCachedEmotes,
+  getEmoteEntry,
+  setCachedEmotes,
+  needsRefresh,
+  fetchBTTVGlobalEmotes,
+  fetchBTTVChannelEmotes,
+  fetchSevenTVGlobalEmotes,
+  fetchSevenTVChannelEmotes,
+  mapEmotesByCode,
+  mergeEmoteMaps,
+  tokenizeMessage,
+  mergeTranslationTokens,
+} from '../../../lib/emotes'
 import ChatMessage from '../../../components/ChatMessage'
 import SettingsDrawer from '../../../components/SettingsDrawer'
 import { withBasePath } from '../../../lib/base-path'
-
-function mergeTranslationTokens(tokens = [], translationText = '') {
-  if (!translationText) return tokens
-  const textTokenIndices = []
-  let totalOriginalLength = 0
-  tokens.forEach((token, idx) => {
-    if (token?.type === 'text') {
-      textTokenIndices.push(idx)
-      totalOriginalLength += token.value?.length || 0
-    }
-  })
-
-  if (textTokenIndices.length === 0) {
-    return [{ type: 'text', value: translationText }, ...tokens.filter(t => t?.type === 'emote')]
-  }
-
-  let remainingText = translationText
-  let remainingOriginal = totalOriginalLength
-  const result = tokens.map(token => ({ ...token }))
-
-  textTokenIndices.forEach((index, position) => {
-    const token = result[index]
-    const originalLength = token.value?.length || 0
-    const isLast = position === textTokenIndices.length - 1
-    if (isLast) {
-      token.value = remainingText
-      remainingText = ''
-      return
-    }
-    if (remainingOriginal <= 0 || !remainingText.length) {
-      token.value = ''
-      return
-    }
-    const remainingLength = remainingText.length
-    const sliceLength = Math.max(
-      0,
-      Math.round((originalLength / remainingOriginal) * remainingLength)
-    )
-    const take = Math.min(sliceLength, remainingText.length)
-    token.value = remainingText.slice(0, take)
-    remainingText = remainingText.slice(take)
-    remainingOriginal -= originalLength
-  })
-
-  if (remainingText) {
-    result.push({ type: 'text', value: remainingText })
-  }
-
-  return result
-}
 
 export default function ChatPageInner() {
   const params = useParams()
@@ -90,6 +53,56 @@ export default function ChatPageInner() {
   const ircRef = useRef(null)
   const chatContainerRef = useRef(null)
   const emoteMapRef = useRef({})
+
+  const ensureTwitchGlobalEmotes = useCallback(async () => {
+    if (!needsRefresh('twitch')) return getCachedEmotes('twitch')
+    const all = []
+    let cursor
+    do {
+      const page = await getGlobalEmotes(cursor)
+      if (!page) break
+      if (Array.isArray(page.data)) all.push(...page.data)
+      cursor = page.pagination?.cursor || undefined
+    } while (cursor)
+    if (all.length) setCachedEmotes('twitch', all)
+    return getCachedEmotes('twitch')
+  }, [])
+
+  const ensureProviderEmotes = useCallback(async (provider, fetcher, channelId) => {
+    if (!needsRefresh(provider, channelId)) {
+      return getCachedEmotes(provider, channelId)
+    }
+    const data = await fetcher(channelId)
+    if (Array.isArray(data) && data.length) {
+      setCachedEmotes(provider, data, channelId)
+    }
+    return getCachedEmotes(provider, channelId)
+  }, [])
+
+  const buildEmoteMap = useCallback(async (twitchId) => {
+    if (!twitchId) return {}
+    const [twitchGlobal, bttvGlobal, sevenGlobal] = await Promise.all([
+      ensureTwitchGlobalEmotes(),
+      ensureProviderEmotes('bttv-global', () => fetchBTTVGlobalEmotes(), undefined),
+      ensureProviderEmotes('7tv-global', () => fetchSevenTVGlobalEmotes(), undefined),
+    ])
+
+    const [bttvChannel, sevenChannel] = await Promise.all([
+      ensureProviderEmotes('bttv-channel', id => fetchBTTVChannelEmotes(id), twitchId),
+      ensureProviderEmotes('7tv-channel', id => fetchSevenTVChannelEmotes(id), twitchId),
+    ])
+
+    const merged = mergeEmoteMaps(
+      mapEmotesByCode(twitchGlobal, 'twitch'),
+      mapEmotesByCode(bttvGlobal, 'bttv'),
+      mapEmotesByCode(bttvChannel, 'bttv'),
+      mapEmotesByCode(sevenGlobal, '7tv'),
+      mapEmotesByCode(sevenChannel, '7tv'),
+    )
+    setEmoteMap(merged)
+    emoteMapRef.current = merged
+    return merged
+  }, [ensureTwitchGlobalEmotes, ensureProviderEmotes])
 
   useEffect(() => {
     const nextLogin = paramValue && paramValue !== '__placeholder__' ? paramValue : queryValue
@@ -138,6 +151,7 @@ export default function ChatPageInner() {
         setStreamTags(s.tags || [])
         setStreamTitle(s.title || '')
       }
+      await buildEmoteMap(u.id)
       const irc = new TwitchIRC({
         onMessage: async (m) => {
           const { textValue, tokens } = tokenizeMessage(m.text, emoteMapRef.current || {})
