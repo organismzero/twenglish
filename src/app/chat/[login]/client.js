@@ -88,12 +88,11 @@ export default function ChatPageInner() {
 
   const ensureTwitchUserEmotes = useCallback(async (userId) => {
     if (!userId) return []
-    if (!needsRefresh('twitch-user', userId)) {
-      return getCachedEmotes('twitch-user', userId)
-    }
-    const emotes = await fetchTwitchUserEmotes()
-    if (emotes.length) setCachedEmotes('twitch-user', emotes, userId)
-    return getCachedEmotes('twitch-user', userId)
+    const cached = getEmoteEntry('twitch-user', userId)
+    if (cached) return cached.emotes || []
+    const emotes = await fetchTwitchUserEmotes(userId)
+    setCachedEmotes('twitch-user', Array.isArray(emotes) ? emotes : [], userId)
+    return Array.isArray(emotes) ? emotes : []
   }, [])
 
   const buildEmoteMap = useCallback(async (broadcasterId, viewerId) => {

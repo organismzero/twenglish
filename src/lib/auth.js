@@ -32,7 +32,7 @@ export function clearToken() {
   sessionStorage.removeItem('twen_token')
 }
 
-export function buildAuthUrl({ redirectUri, scopes=['chat:read','user:read:follows'] }) {
+export function buildAuthUrl({ redirectUri, scopes=['chat:read','user:read:follows','user:read:emotes'] }) {
   if (typeof window === 'undefined') return ''
   const client_id = getClientId()
   const state = Math.random().toString(36).slice(2)

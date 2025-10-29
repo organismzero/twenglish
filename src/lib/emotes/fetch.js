@@ -37,9 +37,10 @@ export async function fetchTwitchChannelEmotes(broadcasterId) {
   }
 }
 
-export async function fetchTwitchUserEmotes() {
+export async function fetchTwitchUserEmotes(userId) {
+  if (!userId) return []
   try {
-    return await getUserEmotes()
+    return await getUserEmotes(userId)
   } catch (err) {
     console.warn('Twitch user emotes fetch failed', err)
     return []

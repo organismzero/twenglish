@@ -66,7 +66,8 @@ export async function getChannelEmotes(broadcasterId) {
   return data.data || data.emotes || []
 }
 
-export async function getUserEmotes() {
-  const data = await helix('/chat/emotes/user')
+export async function getUserEmotes(userId) {
+  if (!userId) return []
+  const data = await helix('/chat/emotes/user', { user_id: userId })
   return data.data || data.emotes || []
 }
