@@ -59,3 +59,14 @@ export async function getGlobalEmotes(after) {
   const data = await helix('/chat/emotes/global', after ? { after } : {})
   return data
 }
+
+export async function getChannelEmotes(broadcasterId) {
+  if (!broadcasterId) return []
+  const data = await helix('/chat/emotes', { broadcaster_id: broadcasterId })
+  return data.data || data.emotes || []
+}
+
+export async function getUserEmotes() {
+  const data = await helix('/chat/emotes/user')
+  return data.data || data.emotes || []
+}

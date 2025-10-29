@@ -58,6 +58,10 @@ function resolveKey(provider, channelId) {
   switch (provider) {
     case 'twitch':
       return STORAGE_KEYS.TWITCH_GLOBAL
+    case 'twitch-channel':
+      return channelId ? STORAGE_KEYS.TWITCH_CHANNEL_PREFIX + channelId : null
+    case 'twitch-user':
+      return channelId ? STORAGE_KEYS.TWITCH_USER_PREFIX + channelId : null
     case 'bttv-global':
       return STORAGE_KEYS.BTTV_GLOBAL
     case 'bttv-channel':

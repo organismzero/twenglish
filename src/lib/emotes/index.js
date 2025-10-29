@@ -10,7 +10,9 @@ export {
   fetchBTTVChannelEmotes,
   fetchSevenTVGlobalEmotes,
   fetchSevenTVChannelEmotes,
+  fetchTwitchGlobalEmotes,
+  fetchTwitchChannelEmotes,
+  fetchTwitchUserEmotes,
 } from './fetch'
 export { mapEmotesByCode, mergeEmoteMaps } from './map'
 export { tokenizeMessage, mergeTranslationTokens } from './tokenize'
-

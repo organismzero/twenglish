@@ -8,26 +8,32 @@ const TWITCH_VALIDATE = 'https://id.twitch.tv/oauth2/validate'
 
 export function getClientId() {
   // Client ID is provided via runtime config UI (settings) and stored in sessionStorage.
+  if (typeof window === 'undefined') return ''
   return sessionStorage.getItem('twen_twitch_client_id') || ''
 }
 
 export function setClientId(id) {
+  if (typeof window === 'undefined') return
   sessionStorage.setItem('twen_twitch_client_id', id || '')
 }
 
 export function getToken() {
+  if (typeof window === 'undefined') return ''
   return sessionStorage.getItem('twen_token') || ''
 }
 
 export function setToken(token) {
+  if (typeof window === 'undefined') return
   if (token) sessionStorage.setItem('twen_token', token)
 }
 
 export function clearToken() {
+  if (typeof window === 'undefined') return
   sessionStorage.removeItem('twen_token')
 }
 
 export function buildAuthUrl({ redirectUri, scopes=['chat:read','user:read:follows'] }) {
+  if (typeof window === 'undefined') return ''
   const client_id = getClientId()
   const state = Math.random().toString(36).slice(2)
   sessionStorage.setItem('twen_oauth_state', state)

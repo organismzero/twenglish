@@ -13,6 +13,39 @@ async function safeFetch(url) {
   return res.json()
 }
 
+import { getGlobalEmotes, getChannelEmotes, getUserEmotes } from '../helix'
+
+export async function fetchTwitchGlobalEmotes() {
+  const all = []
+  let cursor
+  do {
+    const page = await getGlobalEmotes(cursor)
+    if (!page) break
+    const data = page.data || page.emotes || []
+    if (Array.isArray(data)) all.push(...data)
+    cursor = page.pagination?.cursor || undefined
+  } while (cursor)
+  return all
+}
+
+export async function fetchTwitchChannelEmotes(broadcasterId) {
+  try {
+    return await getChannelEmotes(broadcasterId)
+  } catch (err) {
+    console.warn('Twitch channel emotes fetch failed', err)
+    return []
+  }
+}
+
+export async function fetchTwitchUserEmotes() {
+  try {
+    return await getUserEmotes()
+  } catch (err) {
+    console.warn('Twitch user emotes fetch failed', err)
+    return []
+  }
+}
+
 export async function fetchBTTVGlobalEmotes() {
   try {
     const data = await safeFetch(BTTV_GLOBAL_URL)
@@ -61,4 +94,3 @@ export async function fetchSevenTVChannelEmotes(twitchId) {
     return []
   }
 }
-

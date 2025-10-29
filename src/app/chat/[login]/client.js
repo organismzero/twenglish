@@ -6,7 +6,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { getUsersByLogin, getStreamByUserId, getGlobalEmotes } from '../../../lib/helix'
+import { getUsersByLogin, getStreamByUserId, getUser } from '../../../lib/helix'
 import { TwitchIRC } from '../../../lib/irc'
 import { majorityLanguageISO1, detectISO1 } from '../../../lib/detect'
 import { translateIfNeeded } from '../../../lib/translate'
@@ -20,6 +20,9 @@ import {
   fetchBTTVChannelEmotes,
   fetchSevenTVGlobalEmotes,
   fetchSevenTVChannelEmotes,
+  fetchTwitchGlobalEmotes,
+  fetchTwitchChannelEmotes,
+  fetchTwitchUserEmotes,
   mapEmotesByCode,
   mergeEmoteMaps,
   tokenizeMessage,
@@ -57,15 +60,8 @@ export default function ChatPageInner() {
 
   const ensureTwitchGlobalEmotes = useCallback(async () => {
     if (!needsRefresh('twitch')) return getCachedEmotes('twitch')
-    const all = []
-    let cursor
-    do {
-      const page = await getGlobalEmotes(cursor)
-      if (!page) break
-      if (Array.isArray(page.data)) all.push(...page.data)
-      cursor = page.pagination?.cursor || undefined
-    } while (cursor)
-    if (all.length) setCachedEmotes('twitch', all)
+    const emotes = await fetchTwitchGlobalEmotes()
+    if (emotes.length) setCachedEmotes('twitch', emotes)
     return getCachedEmotes('twitch')
   }, [])
 
@@ -80,21 +76,44 @@ export default function ChatPageInner() {
     return getCachedEmotes(provider, channelId)
   }, [])
 
-  const buildEmoteMap = useCallback(async (twitchId) => {
-    if (!twitchId) return {}
+  const ensureTwitchChannelEmotes = useCallback(async (broadcasterId) => {
+    if (!broadcasterId) return []
+    if (!needsRefresh('twitch-channel', broadcasterId)) {
+      return getCachedEmotes('twitch-channel', broadcasterId)
+    }
+    const emotes = await fetchTwitchChannelEmotes(broadcasterId)
+    if (emotes.length) setCachedEmotes('twitch-channel', emotes, broadcasterId)
+    return getCachedEmotes('twitch-channel', broadcasterId)
+  }, [])
+
+  const ensureTwitchUserEmotes = useCallback(async (userId) => {
+    if (!userId) return []
+    if (!needsRefresh('twitch-user', userId)) {
+      return getCachedEmotes('twitch-user', userId)
+    }
+    const emotes = await fetchTwitchUserEmotes()
+    if (emotes.length) setCachedEmotes('twitch-user', emotes, userId)
+    return getCachedEmotes('twitch-user', userId)
+  }, [])
+
+  const buildEmoteMap = useCallback(async (broadcasterId, viewerId) => {
     const [twitchGlobal, bttvGlobal, sevenGlobal] = await Promise.all([
       ensureTwitchGlobalEmotes(),
       ensureProviderEmotes('bttv-global', () => fetchBTTVGlobalEmotes(), undefined),
       ensureProviderEmotes('7tv-global', () => fetchSevenTVGlobalEmotes(), undefined),
     ])
 
-    const [bttvChannel, sevenChannel] = await Promise.all([
-      ensureProviderEmotes('bttv-channel', id => fetchBTTVChannelEmotes(id), twitchId),
-      ensureProviderEmotes('7tv-channel', id => fetchSevenTVChannelEmotes(id), twitchId),
+    const [twitchChannel, bttvChannel, sevenChannel, twitchUser] = await Promise.all([
+      ensureTwitchChannelEmotes(broadcasterId),
+      ensureProviderEmotes('bttv-channel', id => fetchBTTVChannelEmotes(id), broadcasterId),
+      ensureProviderEmotes('7tv-channel', id => fetchSevenTVChannelEmotes(id), broadcasterId),
+      ensureTwitchUserEmotes(viewerId),
     ])
 
     const merged = mergeEmoteMaps(
       mapEmotesByCode(twitchGlobal, 'twitch'),
+      mapEmotesByCode(twitchChannel, 'twitch'),
+      mapEmotesByCode(twitchUser, 'twitch'),
       mapEmotesByCode(bttvGlobal, 'bttv'),
       mapEmotesByCode(bttvChannel, 'bttv'),
       mapEmotesByCode(sevenGlobal, '7tv'),
@@ -103,7 +122,7 @@ export default function ChatPageInner() {
     setEmoteMap(merged)
     emoteMapRef.current = merged
     return merged
-  }, [ensureTwitchGlobalEmotes, ensureProviderEmotes])
+  }, [ensureTwitchGlobalEmotes, ensureProviderEmotes, ensureTwitchChannelEmotes, ensureTwitchUserEmotes])
 
   useEffect(() => {
     const nextLogin = paramValue && paramValue !== '__placeholder__' ? paramValue : queryValue
@@ -129,12 +148,6 @@ export default function ChatPageInner() {
   }, [])
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    const current = mapEmotesByCode(getCachedEmotes())
-    setEmoteMap(current)
-  }, [])
-
-  useEffect(() => {
     emoteMapRef.current = emoteMap
   }, [emoteMap])
 
@@ -152,7 +165,15 @@ export default function ChatPageInner() {
         setStreamTags(s.tags || [])
         setStreamTitle(s.title || '')
       }
-      await buildEmoteMap(u.id)
+      let viewerId = null
+      try {
+        const viewer = await getUser()
+        viewerId = viewer?.id || null
+      } catch (err) {
+        console.warn('Failed to load viewer for emotes', err)
+      }
+
+      await buildEmoteMap(u.id, viewerId)
       const irc = new TwitchIRC({
         onMessage: async (m) => {
           const { textValue, tokens } = tokenizeMessage(m.text, emoteMapRef.current || {})

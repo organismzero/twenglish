@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { buildAuthUrl, getToken, validateToken, getClientId } from '../lib/auth'
 import { withBasePath, getSiteOrigin } from '../lib/base-path'
-import { getUser, getFollowedStreams, getFollowedChannels, getUsersByLogin, getGlobalEmotes } from '../lib/helix'
+import { getUser, getFollowedStreams, getFollowedChannels, getUsersByLogin } from '../lib/helix'
 import ChannelCard from '../components/ChannelCard'
 import SettingsDrawer from '../components/SettingsDrawer'
 import { TARGET_LANGUAGES } from '../lib/translate/target'
@@ -13,6 +13,7 @@ import {
   setCachedEmotes,
   fetchBTTVGlobalEmotes,
   fetchSevenTVGlobalEmotes,
+  fetchTwitchGlobalEmotes,
 } from '../lib/emotes'
 
 export default function HomePage() {
@@ -200,14 +201,7 @@ export default function HomePage() {
 }
 async function ensureTwitchGlobalEmotes(cancelled) {
   if (getEmoteEntry('twitch')) return
-  const all = []
-  let cursor
-  do {
-    const page = await getGlobalEmotes(cursor)
-    if (!page) break
-    if (Array.isArray(page.data)) all.push(...page.data)
-    cursor = page.pagination?.cursor || undefined
-  } while (cursor)
+  const all = await fetchTwitchGlobalEmotes()
   if (cancelled || !all.length) return
   setCachedEmotes('twitch', all)
 }
