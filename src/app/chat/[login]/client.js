@@ -44,6 +44,7 @@ export default function ChatPageInner() {
   const [primaryLang, setPrimaryLang] = useState(null)
   const [streamTags, setStreamTags] = useState([])
   const [streamTitle, setStreamTitle] = useState('')
+  const [streamTitleTranslation, setStreamTitleTranslation] = useState('')
   const [msgs, setMsgs] = useState([])
   const [targetLang, setTargetLang] = useState('en')
   const [avatarUrl, setAvatarUrl] = useState('')
@@ -200,8 +201,43 @@ export default function ChatPageInner() {
       bufRef.current = []
       setAvatarUrl('')
       setStreamTitle('')
+      setStreamTitleTranslation('')
     }
   }, [login])
+
+  useEffect(() => {
+    let cancelled = false
+    async function translateTitle() {
+      if (!streamTitle) {
+        setStreamTitleTranslation('')
+        return
+      }
+      const primary = (primaryLang || '').toLowerCase()
+      if (!primary) {
+        setStreamTitleTranslation('')
+        return
+      }
+      const sourceIso = (detectISO1(streamTitle) || primary).toLowerCase()
+      try {
+        const translated = await translateIfNeeded(streamTitle, sourceIso, primary)
+        if (cancelled) return
+        if (translated && translated !== streamTitle) {
+          setStreamTitleTranslation(translated)
+        } else {
+          setStreamTitleTranslation('')
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.warn('Failed to translate stream title', err)
+          setStreamTitleTranslation('')
+        }
+      }
+    }
+    translateTitle()
+    return () => {
+      cancelled = true
+    }
+  }, [streamTitle, primaryLang, targetLang])
 
   useEffect(() => {
     const el = chatContainerRef.current
@@ -218,7 +254,17 @@ export default function ChatPageInner() {
   return (
     <div className="grid gap-4">
       <div className="card space-y-3">
-        <div className="text-lg font-semibold truncate">{streamTitle || 'Live stream'}</div>
+        <div className="space-y-1">
+          {!streamTitleTranslation && (
+            <div className="text-lg font-semibold truncate">{streamTitle || 'Live stream'}</div>
+          )}
+          {streamTitleTranslation && (
+            <div className="text-lg font-semibold truncate">{streamTitleTranslation || 'Live stream'}</div>
+          )}
+          {streamTitleTranslation && (
+            <div className="text-sm opacity-80 truncate">{streamTitle}</div>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           <button
             className="btn w-10 h-10 rounded-full text-lg leading-none"
