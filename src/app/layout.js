@@ -2,6 +2,35 @@ import Link from 'next/link'
 import './globals.css'
 import { withBasePath } from '../lib/base-path'
 
+const isProduction = process.env.NODE_ENV === 'production'
+
+const CSP_DIRECTIVES = [
+  "default-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: https:",
+  "font-src 'self' data:",
+  [
+    'connect-src',
+    "'self'",
+    'https://api.twitch.tv',
+    'https://id.twitch.tv',
+    'https://static-cdn.jtvnw.net',
+    'https://api.betterttv.net',
+    'https://7tv.io',
+    'https://cdn.7tv.app',
+    'https://api.openai.com',
+    'https://libretranslate.com',
+    'wss://irc-ws.chat.twitch.tv',
+  ].join(' '),
+  isProduction
+    ? "script-src 'self' 'unsafe-inline'"
+    : "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "base-uri 'self'",
+  "form-action 'self'",
+]
+
+const CSP = CSP_DIRECTIVES.join('; ')
+
 const faviconUrl = withBasePath('/icon.svg')
 
 export const metadata = {
@@ -18,6 +47,10 @@ export default function RootLayout({ children }) {
   const logoSrc = faviconUrl
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta httpEquiv="Content-Security-Policy" content={CSP} />
+        <meta name="referrer" content="same-origin" />
+      </head>
       <body suppressHydrationWarning>
         <div className="min-h-screen">
           <header className="border-b border-aquadark-800">

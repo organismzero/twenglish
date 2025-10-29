@@ -48,6 +48,7 @@ npm run dev
 ### Notes
 
 - **Security:** Your translation provider settings (OpenAI key, LibreTranslate endpoint/key) are stored in `sessionStorage` and used only by your own browser. Viewers need to input their own credentials to enable translation.
+- **Headers:** The exported site embeds a Content Security Policy via `<meta http-equiv>` (dev mode relaxes `script-src` for React refresh). Configure HTTPS/HSTS, `frame-ancestors`, `Permissions-Policy`, `X-Content-Type-Options`, and other security headers in your hosting layer or reverse proxy.
 - **Scopes:** Only `chat:read` and `user:read:follows` are required.
 - **Anonymous IRC:** We connect to chat using an anonymous nick (`justinfan*`), which is permitted for reading public chat.
 - **Primary language:** We start with Twitch `stream.language` if available, and refine over time with chat-majority detection. Messages in the primary language are translated to English; English streams show original only.
