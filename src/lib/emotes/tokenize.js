@@ -36,24 +36,28 @@ export function tokenizeMessage(message, emoteMap = {}) {
 
 export function mergeTranslationTokens(tokens = [], translationText = '') {
   if (!translationText) return tokens
-  const textTokenIndices = []
-  let totalOriginalLength = 0
+  const textEntries = []
   tokens.forEach((token, idx) => {
-    if (token?.type === 'text') {
-      textTokenIndices.push(idx)
-      totalOriginalLength += token.value?.length || 0
+    if (
+      token?.type === 'text' &&
+      typeof token.value === 'string' &&
+      token.value.trim().length > 0
+    ) {
+      textEntries.push({ idx, length: token.value.length })
     }
   })
-  if (textTokenIndices.length === 0) {
-    return [{ type: 'text', value: translationText }, ...tokens.filter(t => t?.type === 'emote')]
+  if (textEntries.length === 0) {
+    const emoteTokens = tokens.filter(t => t?.type === 'emote')
+    return [{ type: 'text', value: translationText }, ...emoteTokens]
   }
-  let remainingText = translationText
-  let remainingOriginal = totalOriginalLength
   const result = tokens.map(token => ({ ...token }))
-  textTokenIndices.forEach((index, position) => {
-    const token = result[index]
-    const originalLength = token.value?.length || 0
-    const isLast = position === textTokenIndices.length - 1
+  const totalOriginalLength = textEntries.reduce((sum, entry) => sum + entry.length, 0)
+  let remainingOriginal = totalOriginalLength
+  let remainingText = translationText
+
+  textEntries.forEach((entry, position) => {
+    const token = result[entry.idx]
+    const isLast = position === textEntries.length - 1
     if (isLast) {
       token.value = remainingText
       remainingText = ''
@@ -63,16 +67,19 @@ export function mergeTranslationTokens(tokens = [], translationText = '') {
       token.value = ''
       return
     }
-    const remainingLength = remainingText.length
-    const sliceLength = Math.max(0, Math.round((originalLength / remainingOriginal) * remainingLength))
+    const sliceLength = Math.max(
+      0,
+      Math.round((entry.length / remainingOriginal) * remainingText.length)
+    )
     const take = Math.min(sliceLength, remainingText.length)
     token.value = remainingText.slice(0, take)
     remainingText = remainingText.slice(take)
-    remainingOriginal -= originalLength
+    remainingOriginal -= entry.length
   })
+
   if (remainingText) {
     result.push({ type: 'text', value: remainingText })
   }
+
   return result
 }
-

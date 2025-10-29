@@ -33,11 +33,13 @@ function normalizeEmoteData(emote, provider) {
     case '7tv': {
       const base = emote.data || emote
       if (!base) return null
+      const alias = typeof emote.name === 'string' && emote.name.trim().length ? emote.name : null
+      const name = alias || base.name || base.code || emote.id
       return {
         ...base,
         id: base.id || emote.id,
-        name: base.name || emote.name,
-        code: base.name || emote.name,
+        name,
+        code: name,
         host: base.host || emote.host,
       }
     }
@@ -94,4 +96,3 @@ function buildImageSet(images) {
     url_4x: images.url_4x || '',
   }
 }
-
